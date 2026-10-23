@@ -92,7 +92,6 @@ require __DIR__ . '/includes/header.php';
                         <small class="field-hint">Required — your invoice and receipt are sent to this email.</small>
                     </div>
 
-                    <p class="pay-error" id="pay-error" role="alert"></p>
                     <button class="btn btn-lg btn-block" id="pay-btn" type="submit" style="margin-top:1rem" <?= $paddleReady ? '' : 'disabled' ?>>
                         🔒 Continue to payment — <?= e(money($summary['total'])) ?>
                     </button>
@@ -106,6 +105,7 @@ require __DIR__ . '/includes/header.php';
                     <p class="muted paddle-step__who" id="paddle-who"></p>
                     <div class="paddle-frame" id="paddle-checkout"></div>
                 </div>
+                <p class="pay-error" id="pay-error" role="alert"></p>
                 <div class="secure-row">
                     <span>🔒 Secure checkout</span><span>💳 Payments by Paddle</span><span>↩︎ 30-day guarantee</span>
                 </div>

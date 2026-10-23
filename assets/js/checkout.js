@@ -9,18 +9,7 @@
   var who = document.getElementById('paddle-who');
   var btnLabel = btn.innerHTML;
   var successUrl = null;
-
-  if (cfg.sandbox) Paddle.Environment.set('sandbox');
-  Paddle.Initialize({
-    token: cfg.clientToken,
-    eventCallback: function (ev) {
-      if (ev.name === 'checkout.completed' && successUrl) {
-        window.location.href = successUrl;
-      } else if (ev.name === 'checkout.error') {
-        showError((ev.data && ev.data.error && ev.data.error.detail) || 'The payment form could not be loaded. Please try again.');
-      }
-    }
-  });
+  var loadTimer = null;
 
   function showError(msg) {
     errBox.textContent = msg;
@@ -29,7 +18,37 @@
     btn.innerHTML = btnLabel;
   }
 
+  // The payment form couldn't open: explain why and let the buyer try again.
+  function checkoutFailed(msg) {
+    clearTimeout(loadTimer);
+    showForm();
+    showError(msg);
+  }
+
+  if (!window.Paddle) {
+    showError('The payment system could not be loaded. Please disable any ad/script blocker for this site and refresh the page.');
+    btn.disabled = true;
+    return;
+  }
+
+  if (cfg.sandbox) Paddle.Environment.set('sandbox');
+  Paddle.Initialize({
+    token: cfg.clientToken,
+    eventCallback: function (ev) {
+      if (window.console) console.log('[Paddle]', ev.name, ev);
+      if (ev.name === 'checkout.loaded') {
+        clearTimeout(loadTimer);
+      } else if (ev.name === 'checkout.completed' && successUrl) {
+        window.location.href = successUrl;
+      } else if (ev.name === 'checkout.error') {
+        var d = ev.data || ev.error || {};
+        checkoutFailed('Payment form error: ' + ((d.error && d.error.detail) || d.detail || d.message || 'the checkout could not be opened.') + ' Please try again.');
+      }
+    }
+  });
+
   function showForm() {
+    clearTimeout(loadTimer);
     try { Paddle.Checkout.close(); } catch (e) {}
     step.hidden = true;
     form.hidden = false;
@@ -71,6 +90,10 @@
     form.hidden = true;
     step.hidden = false;
     who.textContent = first + ' ' + last + ' · ' + email;
+
+    loadTimer = setTimeout(function () {
+      checkoutFailed('The payment form did not load. Please check your connection, disable any ad/script blocker and try again.');
+    }, 15000);
 
     Paddle.Checkout.open({
       transactionId: data.transactionId,
