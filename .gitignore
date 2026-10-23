@@ -1,0 +1,29 @@
+# Environment files — database passwords and Stripe keys (keep .env.example)
+.env
+.env.*
+!.env.example
+
+# Created by install.php on each server
+config/installed.lock
+
+# Database exports — contain customer emails and the admin password hash
+database/*.sql
+database/*.sql.gz
+
+# Paid product PDFs (private) and admin-uploaded images — copy these to the server separately
+storage/*
+!storage/.htaccess
+uploads/*
+!uploads/.htaccess
+
+# Logs and temp files
+*.log
+*.tmp
+error_log
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

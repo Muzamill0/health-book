@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" width="300" height="400">
+<rect width="300" height="400" rx="10" fill="#2f4a45"/>
+<rect x="18" y="18" width="264" height="364" rx="6" fill="none" stroke="#e4e8d9" stroke-opacity=".35" stroke-width="2"/>
+<circle cx="150" cy="175" r="72" fill="#e4e8d9" fill-opacity=".14"/>
+<g fill="none" stroke="#e4e8d9" stroke-width="5" stroke-linecap="round">
+<path d="M100 175a50 50 0 0 0 100 0z" fill="#e4e8d9" fill-opacity=".9"/>
+<path d="M125 140c0-14 12-14 12-28M150 140c0-14 12-14 12-28M175 140c0-14 12-14 12-28" stroke-opacity=".7"/>
+</g>
+<text x="150" y="290" text-anchor="middle" font-family="Georgia,serif" font-size="30" fill="#e4e8d9">Fresh</text>
+<text x="150" y="320" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" letter-spacing="3" fill="#e4e8d9" fill-opacity=".8">COOKBOOK</text>
+</svg>

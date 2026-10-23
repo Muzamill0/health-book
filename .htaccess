@@ -1,0 +1,5 @@
+# Block access to environment and hidden files
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+Options -Indexes

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e4e8d9"/><stop offset="1" stop-color="#f7f1e4"/></linearGradient></defs>
+<rect width="800" height="800" fill="url(#g)"/>
+<circle cx="400" cy="420" r="300" fill="#c1622d" fill-opacity=".08"/>
+<g transform="translate(120 190) rotate(-10)"><rect width="220" height="300" rx="8" fill="#2f4a45"/><text x="110" y="160" text-anchor="middle" font-family="Georgia,serif" font-size="26" fill="#e4e8d9">Fresh</text></g>
+<g transform="translate(460 170) rotate(10)"><rect width="220" height="300" rx="8" fill="#5b7a52"/><text x="110" y="160" text-anchor="middle" font-family="Georgia,serif" font-size="26" fill="#f7f1e4">Cozy</text></g>
+<g transform="translate(270 220)"><rect width="260" height="350" rx="10" fill="#c1622d"/><rect x="14" y="14" width="232" height="322" rx="6" fill="none" stroke="#f7f1e4" stroke-opacity=".4" stroke-width="2"/>
+<text x="130" y="120" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" letter-spacing="4" fill="#f7f1e4">THE COMPLETE</text>
+<text x="130" y="170" text-anchor="middle" font-family="Georgia,serif" font-size="34" fill="#f7f1e4">Healing</text>
+<text x="130" y="210" text-anchor="middle" font-family="Georgia,serif" font-size="34" fill="#f7f1e4">Kitchen</text>
+<text x="130" y="260" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" letter-spacing="3" fill="#f7f1e4" fill-opacity=".85">15 COOKBOOKS</text></g>
+<g transform="translate(590 560)"><circle r="78" fill="#22332f"/><text y="-8" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="26" fill="#f7f1e4">+10</text><text y="20" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" letter-spacing="2" fill="#f7f1e4">BONUSES</text></g>
+</svg>
