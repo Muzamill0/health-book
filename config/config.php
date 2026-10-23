@@ -36,10 +36,12 @@ define('DB_PASS', env('DB_PASS'));
 // Public base URL without trailing slash, e.g. https://example.com
 define('BASE_URL', rtrim(env('APP_URL', 'http://localhost:8888/health-book'), '/'));
 
-// Stripe (https://dashboard.stripe.com/apikeys)
-define('STRIPE_PUBLISHABLE_KEY', env('STRIPE_PUBLISHABLE_KEY'));
-define('STRIPE_SECRET_KEY', env('STRIPE_SECRET_KEY'));
-define('STRIPE_WEBHOOK_SECRET', env('STRIPE_WEBHOOK_SECRET'));
+// Paddle Billing (https://vendors.paddle.com → Developer tools → Authentication)
+define('PADDLE_ENV', env('PADDLE_ENV', 'sandbox') === 'production' ? 'production' : 'sandbox');
+define('PADDLE_API_KEY', env('PADDLE_API_KEY'));
+define('PADDLE_CLIENT_TOKEN', env('PADDLE_CLIENT_TOKEN'));
+define('PADDLE_WEBHOOK_SECRET', env('PADDLE_WEBHOOK_SECRET'));
+define('PADDLE_TAX_CATEGORY', env('PADDLE_TAX_CATEGORY', 'standard'));
 
 define('UPLOAD_DIR', __DIR__ . '/../uploads');
 define('UPLOAD_URL', BASE_URL . '/uploads');

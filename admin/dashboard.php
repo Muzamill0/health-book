@@ -14,8 +14,8 @@ $sym = setting('currency_symbol');
 
 require __DIR__ . '/_top.php';
 ?>
-<?php if (STRIPE_SECRET_KEY === '' || STRIPE_PUBLISHABLE_KEY === ''): ?>
-    <div class="alert warning">Stripe is not configured yet — customers cannot pay. <a href="stripe.php">See how to add your Stripe keys</a>.</div>
+<?php if (PADDLE_API_KEY === '' || PADDLE_CLIENT_TOKEN === ''): ?>
+    <div class="alert warning">Paddle is not configured yet — customers cannot pay. <a href="payments.php">See how to add your Paddle keys</a>.</div>
 <?php endif; ?>
 <?php
 $noPdf = (int) db()->query("SELECT COUNT(*) FROM books WHERE is_active = 1 AND pdf_file = ''")->fetchColumn();

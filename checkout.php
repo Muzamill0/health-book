@@ -26,23 +26,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $summary = cart_summary();
 $currency = strtolower(setting('currency', 'usd'));
-$pk = STRIPE_PUBLISHABLE_KEY;
+$paddleReady = PADDLE_CLIENT_TOKEN !== '' && PADDLE_API_KEY !== '';
 $isEmpty = $summary['type'] === 'empty';
 $amountMinor = to_minor_units($summary['total'], $currency);
 
 $pageTitle = 'Checkout — ' . setting('site_name');
 $hideNewsletter = true;
 $extraScripts = '';
-if ($pk !== '' && !$isEmpty) {
+if ($paddleReady && !$isEmpty) {
     $config = [
-        'publishableKey' => $pk,
-        'amount'         => $amountMinor,
-        'currency'       => $currency,
-        'createUrl'      => url('create-payment.php'),
-        'primary'        => setting('color_primary'),
-        'csrf'           => csrf_token(),
+        'clientToken' => PADDLE_CLIENT_TOKEN,
+        'sandbox'     => PADDLE_ENV !== 'production',
+        'amount'      => $amountMinor,
+        'createUrl'   => url('create-payment.php'),
+        'csrf'        => csrf_token(),
     ];
-    $extraScripts = '<script src="https://js.stripe.com/v3/"></script>'
+    $extraScripts = '<script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>'
         . '<script>window.CHECKOUT = ' . json_encode($config, JSON_HEX_TAG | JSON_HEX_AMP) . ';</script>'
         . '<script src="' . e(url('assets/js/checkout.js')) . '"></script>';
 }
@@ -70,8 +69,8 @@ require __DIR__ . '/includes/header.php';
         <?php else: ?>
         <div class="checkout__grid">
             <div class="card checkout__form">
-                <?php if ($pk === ''): ?>
-                    <div class="notice"><strong>Payments are not configured yet.</strong> Add your Stripe keys to the .env file.</div>
+                <?php if (!$paddleReady): ?>
+                    <div class="notice"><strong>Payments are not configured yet.</strong> Add your Paddle keys to the .env file.</div>
                 <?php endif; ?>
 
                 <form id="checkout-form" novalidate>
@@ -93,17 +92,24 @@ require __DIR__ . '/includes/header.php';
                         <small class="field-hint">Required — your invoice and receipt are sent to this email.</small>
                     </div>
 
-                    <h2>Payment</h2>
-                    <div id="payment-element"></div>
                     <p class="pay-error" id="pay-error" role="alert"></p>
-
-                    <button class="btn btn-lg btn-block" id="pay-btn" type="submit" style="margin-top:1.4rem" <?= $pk === '' ? 'disabled' : '' ?>>
-                        🔒 Pay <?= e(money($summary['total'])) ?> &amp; Get Instant Access
+                    <button class="btn btn-lg btn-block" id="pay-btn" type="submit" style="margin-top:1rem" <?= $paddleReady ? '' : 'disabled' ?>>
+                        🔒 Continue to payment — <?= e(money($summary['total'])) ?>
                     </button>
-                    <div class="secure-row">
-                        <span>🔒 SSL encrypted</span><span>💳 Powered by Stripe</span><span>↩︎ 30-day guarantee</span>
-                    </div>
                 </form>
+
+                <div class="paddle-step" id="paddle-step" hidden>
+                    <div class="paddle-step__head">
+                        <h2>Payment</h2>
+                        <button type="button" class="link-btn" id="edit-details">Edit details</button>
+                    </div>
+                    <p class="muted paddle-step__who" id="paddle-who"></p>
+                    <div class="paddle-frame" id="paddle-checkout"></div>
+                </div>
+                <div class="secure-row">
+                    <span>🔒 Secure checkout</span><span>💳 Payments by Paddle</span><span>↩︎ 30-day guarantee</span>
+                </div>
+                <p class="field-hint" style="text-align:center">Applicable sales tax/VAT is calculated by Paddle based on your country.</p>
             </div>
 
             <aside class="card summary">

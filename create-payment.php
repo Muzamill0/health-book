@@ -1,14 +1,14 @@
 <?php
 /**
- * Called by assets/js/checkout.js when the buyer clicks Pay.
- *  1. Prices the session cart (complete bundle or selected books) on the server.
- *  2. Finds or creates the Stripe Customer for the buyer's email.
- *  3. Creates and finalizes a Stripe Invoice with one line per book (plus the discount line).
- *  4. Returns the client secret of the invoice's PaymentIntent so the browser can pay it.
+ * Called by assets/js/checkout.js when the buyer clicks "Continue to payment".
+ *  1. Prices the session cart (bundle or selected books) on the server.
+ *  2. Finds or creates the Paddle customer for the buyer's email.
+ *  3. Creates a Paddle transaction with one line per book (or one line for the bundle).
+ *  4. Returns the transaction id so Paddle.js can open the inline checkout for it.
  * Books sell at their own price; the bundle (books and price set by the admin) is the only discount.
- * Prices always come from the database, never from the browser.
+ * Prices always come from the database, never from the browser. Paddle adds tax where required.
  */
-require_once __DIR__ . '/includes/stripe.php';
+require_once __DIR__ . '/includes/paddle.php';
 header('Content-Type: application/json');
 
 function fail(string $msg, int $code = 400): never
@@ -18,11 +18,11 @@ function fail(string $msg, int $code = 400): never
     exit;
 }
 
-function respond(array $order, string $clientSecret): never
+function respond(array $order, string $transactionId): never
 {
     echo json_encode([
-        'clientSecret' => $clientSecret,
-        'returnUrl'    => url('success.php?order=' . urlencode($order['order_no']) . '&t=' . $order['access_token']),
+        'transactionId' => $transactionId,
+        'successUrl'    => url('success.php?order=' . urlencode($order['order_no']) . '&t=' . $order['access_token']),
     ]);
     exit;
 }
@@ -55,11 +55,8 @@ $totalMinor = to_minor_units($cart['total'], $currency);
 if ((int) ($_POST['expected'] ?? -1) !== $totalMinor) {
     fail('Your cart or prices changed. Please refresh the page to see the latest total.');
 }
-if ($totalMinor < 50) {
-    fail('The order total is too low to process a card payment.');
-}
 
-// Identifies this exact purchase so a retry (e.g. after a declined card) can reuse the same invoice.
+// Identifies this exact purchase so a retry (e.g. after a declined card) can reuse the same transaction.
 $signature = hash('sha256', json_encode([$email, $cart['type'], array_column($cart['items'], 'id'), $totalMinor, $currency]));
 
 try {
@@ -67,32 +64,32 @@ try {
         $stmt = db()->prepare("SELECT * FROM orders WHERE id = ? AND status IN ('pending', 'failed')");
         $stmt->execute([$_SESSION['checkout_order']]);
         $previous = $stmt->fetch();
-        if ($previous && $previous['stripe_payment_intent']) {
+        if ($previous && $previous['paddle_transaction_id']) {
             if (($_SESSION['checkout_signature'] ?? '') === $signature) {
-                $pi = stripe_request('GET', 'payment_intents/' . $previous['stripe_payment_intent']);
-                if (in_array($pi['status'], ['requires_payment_method', 'requires_confirmation', 'requires_action'], true)) {
-                    respond($previous, $pi['client_secret']);
+                $txn = paddle_request('GET', 'transactions/' . $previous['paddle_transaction_id']);
+                if (in_array($txn['status'] ?? '', ['draft', 'ready'], true)) {
+                    respond($previous, $txn['id']);
                 }
             }
-            stripe_void_invoice($previous);
+            paddle_cancel_transaction($previous);
         }
         unset($_SESSION['checkout_order'], $_SESSION['checkout_signature']);
     }
 
-    $customer = stripe_find_or_create_customer($email, $name);
+    $customer = paddle_find_or_create_customer($email, $name);
     $referrer = current_referrer();
 
     $orderNo = 'HB-' . date('ymd') . '-' . strtoupper(bin2hex(random_bytes(3)));
     $token = bin2hex(random_bytes(24));
-    $meta = ['order_no' => $orderNo, 'order_type' => $cart['type'], 'books' => (string) $cart['count']]
+    $customData = ['order_no' => $orderNo, 'order_type' => $cart['type'], 'books' => (string) $cart['count']]
         + ($referrer ? ['referrer' => $referrer['name'], 'referrer_code' => $referrer['code']] : []);
 
     db()->beginTransaction();
     db()->prepare('INSERT INTO orders (order_no, access_token, customer_name, customer_email, referrer_id, product_name, order_type,
-                   subtotal, discount_amount, amount, currency, stripe_customer_id)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?)')
+                   subtotal, discount_amount, amount, currency, payment_provider, paddle_customer_id)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)')
         ->execute([$orderNo, $token, $name, $email, $referrer['id'] ?? null, $cart['name'], $cart['type'],
-                   $cart['subtotal'], $cart['discount'], $cart['total'], $currency, $customer['id']]);
+                   $cart['subtotal'], $cart['discount'], $cart['total'], $currency, 'paddle', $customer['id']]);
     $orderId = (int) db()->lastInsertId();
     // Record the books bought (for a bundle: the bundle's books right now), so later bundle changes don't affect this order.
     $item = db()->prepare('INSERT INTO order_items (order_id, book_id, title, unit_price) VALUES (?,?,?,?)');
@@ -101,58 +98,50 @@ try {
     }
     db()->commit();
 
-    $invoice = stripe_request('POST', 'invoices', [
-        'customer'                       => $customer['id'],
-        'currency'                       => $currency,
-        'collection_method'              => 'charge_automatically',
-        'auto_advance'                   => 'false',
-        'pending_invoice_items_behavior' => 'exclude',
-        'description'                    => 'Order ' . $orderNo,
-        'metadata'                       => $meta,
-        'payment_settings'               => ['payment_method_types' => ['card']],
-    ]);
-
-    $lines = [];
+    // Non-catalog items: prices come from our database, so nothing has to be set up in the Paddle catalog.
+    $line = fn (string $title, string $description, int $amount) => [
+        'quantity' => 1,
+        'price'    => [
+            'description' => mb_substr($title, 0, 200),
+            'name'        => mb_substr($title, 0, 150),
+            'unit_price'  => ['amount' => (string) $amount, 'currency_code' => strtoupper($currency)],
+            'product'     => [
+                'name'         => mb_substr($title, 0, 200),
+                'description'  => mb_substr($description, 0, 500),
+                'tax_category' => PADDLE_TAX_CATEGORY,
+            ],
+        ],
+    ];
     if ($cart['type'] === 'bundle') {
-        $lines[] = [to_minor_units($cart['total'], $currency), $cart['name'] . ': ' . mb_strimwidth(implode(', ', array_column($cart['items'], 'title')), 0, 200, '…')];
+        $items = [$line($cart['name'], implode(', ', array_column($cart['items'], 'title')), $totalMinor)];
     } else {
-        foreach ($cart['items'] as $b) {
-            $lines[] = [to_minor_units((float) $b['price'], $currency), $b['title'] . ' (cookbook PDF)'];
-        }
-    }
-    foreach ($lines as [$amount, $description]) {
-        stripe_request('POST', 'invoiceitems', [
-            'customer'    => $customer['id'],
-            'invoice'     => $invoice['id'],
-            'amount'      => $amount,
-            'currency'    => $currency,
-            'description' => mb_substr($description, 0, 250),
-        ]);
+        $items = array_map(fn ($b) => $line($b['title'] . ' (cookbook PDF)', (string) $b['description'], to_minor_units((float) $b['price'], $currency)), $cart['items']);
     }
 
-    $invoice = stripe_request('POST', 'invoices/' . $invoice['id'] . '/finalize', [
-        'auto_advance' => 'false',
-        'expand'       => ['payment_intent'],
+    $txn = paddle_request('POST', 'transactions', [
+        'items'           => $items,
+        'customer_id'     => $customer['id'],
+        'currency_code'   => strtoupper($currency),
+        'collection_mode' => 'automatic',
+        'custom_data'     => $customData,
     ]);
-    $pi = $invoice['payment_intent'];
-    if (!is_array($pi) || empty($pi['client_secret'])) {
-        throw new RuntimeException('Stripe did not return a payment for this invoice.');
+    if (empty($txn['id'])) {
+        throw new RuntimeException('Paddle did not return a transaction.');
     }
-    if ((int) $pi['amount'] !== $totalMinor) {
-        throw new RuntimeException('The invoice total did not match your cart. Please try again.');
-    }
-    // Tag the PaymentIntent so it is easy to find in the Stripe Dashboard.
-    stripe_request('POST', 'payment_intents/' . $pi['id'], ['metadata' => $meta]);
 
-    db()->prepare('UPDATE orders SET stripe_invoice_id = ?, invoice_number = ?, invoice_url = ?, invoice_pdf = ?, stripe_payment_intent = ? WHERE id = ?')
-        ->execute([$invoice['id'], $invoice['number'], $invoice['hosted_invoice_url'], $invoice['invoice_pdf'], $pi['id'], $orderId]);
+    db()->prepare('UPDATE orders SET paddle_transaction_id = ? WHERE id = ?')->execute([$txn['id'], $orderId]);
 
     $_SESSION['checkout_order'] = $orderId;
     $_SESSION['checkout_signature'] = $signature;
-    respond(['order_no' => $orderNo, 'access_token' => $token], $pi['client_secret']);
+    respond(['order_no' => $orderNo, 'access_token' => $token], $txn['id']);
 } catch (Throwable $ex) {
     if (db()->inTransaction()) {
         db()->rollBack();
+    }
+    // Paddle refused the transaction: drop the order we just saved so no empty pending order is left behind.
+    if (!empty($orderId) && empty($txn['id'])) {
+        db()->prepare('DELETE FROM order_items WHERE order_id = ?')->execute([$orderId]);
+        db()->prepare('DELETE FROM orders WHERE id = ?')->execute([$orderId]);
     }
     error_log('Checkout error: ' . $ex->getMessage());
     fail($ex instanceof RuntimeException ? $ex->getMessage() : 'Could not create the order. Please try again.', 500);

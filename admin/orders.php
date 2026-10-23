@@ -31,9 +31,9 @@ if (($_GET['export'] ?? '') === 'csv') {
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="orders-' . date('Ymd') . '.csv"');
     $out = fopen('php://output', 'w');
-    fputcsv($out, ['Order', 'Name', 'Email', 'Referred by', 'Type', 'Product', 'Amount', 'Currency', 'Status', 'Invoice', 'Invoice PDF', 'Stripe Customer', 'Stripe PaymentIntent', 'Created', 'Paid', 'Downloads']);
+    fputcsv($out, ['Order', 'Name', 'Email', 'Referred by', 'Type', 'Product', 'Amount', 'Currency', 'Status', 'Tax', 'Invoice', 'Provider', 'Paddle Transaction', 'Paddle Customer', 'Stripe PaymentIntent', 'Created', 'Paid', 'Downloads']);
     foreach ($recent as $o) {
-        fputcsv($out, [$o['order_no'], $o['customer_name'], $o['customer_email'], $o['referrer_name'] ?? 'Direct', $o['order_type'], $o['product_name'], $o['amount'], $o['currency'], $o['status'], $o['invoice_number'], $o['invoice_pdf'], $o['stripe_customer_id'], $o['stripe_payment_intent'], $o['created_at'], $o['paid_at'], $o['download_count']]);
+        fputcsv($out, [$o['order_no'], $o['customer_name'], $o['customer_email'], $o['referrer_name'] ?? 'Direct', $o['order_type'], $o['product_name'], $o['amount'], $o['currency'], $o['status'], $o['tax_amount'], $o['invoice_number'], $o['payment_provider'], $o['paddle_transaction_id'], $o['paddle_customer_id'], $o['stripe_payment_intent'], $o['created_at'], $o['paid_at'], $o['download_count']]);
     }
     exit;
 }

@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/includes/stripe.php';
+require_once __DIR__ . '/includes/paddle.php';
 
 $stmt = db()->prepare('SELECT * FROM orders WHERE order_no = ?');
 $stmt->execute([(string) ($_GET['order'] ?? '')]);
@@ -9,11 +9,14 @@ if (!$order || !hash_equals($order['access_token'], (string) ($_GET['t'] ?? ''))
 }
 
 $error = '';
-if ($order && $order['status'] !== 'paid' && $order['stripe_payment_intent']) {
+if ($order && $order['status'] !== 'paid' && $order['paddle_transaction_id']) {
     try {
-        // Always confirm with Stripe; never trust the redirect query string alone.
-        $pi = stripe_request('GET', 'payment_intents/' . $order['stripe_payment_intent']);
-        $order = sync_order_from_intent($pi) ?? $order;
+        // Always confirm with Paddle; never trust the redirect alone.
+        $txn = paddle_request('GET', 'transactions/' . $order['paddle_transaction_id']);
+        $order = sync_order_from_transaction($txn) ?? $order;
+        if ($order['status'] !== 'paid' && in_array($txn['status'] ?? '', ['draft', 'ready', 'billed'], true)) {
+            $order['status'] = 'processing'; // Paddle can take a few seconds to settle after checkout
+        }
     } catch (Throwable $ex) {
         $error = 'We could not confirm your payment yet. Please refresh this page in a moment.';
     }
@@ -25,9 +28,6 @@ if ($order && $order['status'] === 'paid') {
         // Empty the cart once after a successful purchase.
         cart_set(false, []);
         $_SESSION['paid_cart_cleared'] = $order['order_no'];
-    }
-    if (!$order['invoice_pdf'] && $order['stripe_invoice_id']) {
-        $order = sync_order_invoice($order);
     }
 }
 
@@ -49,10 +49,14 @@ require __DIR__ . '/includes/header.php';
                 <div><strong>Order:</strong> <?= e($order['order_no']) ?></div>
                 <?php if ($order['invoice_number']): ?><div><strong>Invoice:</strong> <?= e($order['invoice_number']) ?></div><?php endif; ?>
                 <div><strong>Product:</strong> <?= e($order['product_name']) ?></div>
-                <div><strong>Amount:</strong> <?= e(setting('currency_symbol')) . number_format((float) $order['amount'], 2) ?> <?= e(strtoupper($order['currency'])) ?></div>
+                <div><strong>Amount:</strong> <?= e(setting('currency_symbol')) . number_format((float) $order['amount'], 2) ?> <?= e(strtoupper($order['currency'])) ?><?= (float) $order['tax_amount'] > 0 ? ' (incl. ' . e(setting('currency_symbol')) . number_format((float) $order['tax_amount'], 2) . ' tax)' : '' ?></div>
                 <div><strong>Email:</strong> <?= e($order['customer_email']) ?></div>
             </div>
-            <?php if ($order['invoice_pdf'] || $order['invoice_url']): ?>
+            <?php if ($order['paddle_transaction_id']): ?>
+                <div class="invoice-actions" style="margin:0 0 1.5rem">
+                    <a class="btn btn-light" href="<?= e(url('invoice.php?order=' . urlencode($order['order_no']) . '&t=' . $order['access_token'])) ?>" target="_blank" rel="noopener">📄 Download invoice (PDF)</a>
+                </div>
+            <?php elseif ($order['invoice_pdf'] || $order['invoice_url']): ?>
                 <div class="invoice-actions" style="margin:0 0 1.5rem">
                     <?php if ($order['invoice_pdf']): ?><a class="btn btn-light" href="<?= e($order['invoice_pdf']) ?>" target="_blank" rel="noopener">📄 Download invoice (PDF)</a><?php endif; ?>
                     <?php if ($order['invoice_url']): ?><a class="btn btn-light" href="<?= e($order['invoice_url']) ?>" target="_blank" rel="noopener">View invoice online</a><?php endif; ?>
@@ -99,7 +103,8 @@ require __DIR__ . '/includes/header.php';
             <?php endif; ?>
         <?php elseif ($order['status'] === 'processing'): ?>
             <h1>Payment processing…</h1>
-            <p class="muted">Your payment is being processed. Refresh this page in a minute.</p>
+            <p class="muted">Your payment is being confirmed. This page will refresh automatically.</p>
+            <script>setTimeout(function () { location.reload(); }, 4000);</script>
         <?php else: ?>
             <h1>Payment not completed</h1>
             <p class="muted"><?= e($error ?: 'Your payment was not completed and you have not been charged.') ?></p>

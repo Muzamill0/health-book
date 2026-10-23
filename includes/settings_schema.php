@@ -56,7 +56,7 @@ return [
     'pricing' => [
         'label' => 'Currency & Cart',
         'fields' => [
-            'currency'           => ['label' => 'Currency code (Stripe, e.g. usd, gbp, eur)', 'type' => 'text', 'default' => 'usd'],
+            'currency'           => ['label' => 'Currency code (e.g. usd, gbp, eur — must be a currency your Paddle account supports)', 'type' => 'text', 'default' => 'usd'],
             'currency_symbol'    => ['label' => 'Currency symbol', 'type' => 'text', 'default' => '$'],
             'add_to_cart_text'     => ['label' => 'Add to cart button text', 'type' => 'text', 'default' => 'Add to cart'],
             'cart_hint_text'       => ['label' => 'Books section hint', 'type' => 'textarea', 'default' => 'Buy any cookbook on its own, or save with the {bundle_name}: {bundle_count} books for just {bundle_price}.'],

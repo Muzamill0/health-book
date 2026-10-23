@@ -11,7 +11,8 @@
             <td><strong><?= e($o['order_no']) ?></strong></td>
             <td>
                 <?= e($o['customer_name']) ?><br><small class="muted"><?= e($o['customer_email']) ?></small>
-                <?php if ($o['stripe_customer_id']): ?><br><a href="https://dashboard.stripe.com/customers/<?= e($o['stripe_customer_id']) ?>" target="_blank" rel="noopener"><small>Stripe customer ↗</small></a><?php endif; ?>
+                <?php if ($o['paddle_transaction_id']): ?><br><a href="<?= e(paddle_dashboard_url('transaction', $o['paddle_transaction_id'])) ?>" target="_blank" rel="noopener"><small>Paddle ↗</small></a>
+                <?php elseif ($o['stripe_customer_id']): ?><br><a href="https://dashboard.stripe.com/customers/<?= e($o['stripe_customer_id']) ?>" target="_blank" rel="noopener"><small>Stripe customer ↗</small></a><?php endif; ?>
             </td>
             <td><?php if (!empty($o['referrer_name'])): ?><span class="badge badge-ref">🔗 <?= e($o['referrer_name']) ?></span><?php else: ?><small class="muted">Direct</small><?php endif; ?></td>
             <td>

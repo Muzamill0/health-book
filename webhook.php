@@ -1,39 +1,31 @@
 <?php
 /**
- * Stripe webhook endpoint. In the Stripe Dashboard add:
+ * Paddle webhook endpoint. In Paddle → Developer tools → Notifications, add a destination:
  *   URL:    {BASE_URL}/webhook.php
- *   Events: invoice.paid, payment_intent.succeeded, payment_intent.payment_failed, payment_intent.canceled, payment_intent.processing
+ *   Events: transaction.completed, transaction.paid, transaction.payment_failed,
+ *           transaction.past_due, transaction.canceled
+ * and put its secret key in PADDLE_WEBHOOK_SECRET.
  */
-require_once __DIR__ . '/includes/stripe.php';
+require_once __DIR__ . '/includes/paddle.php';
 
 $payload = file_get_contents('php://input');
-$secret = STRIPE_WEBHOOK_SECRET;
 
-if ($secret === '' || !stripe_verify_signature($payload, $_SERVER['HTTP_STRIPE_SIGNATURE'] ?? '', $secret)) {
+if (PADDLE_WEBHOOK_SECRET === '' || !paddle_verify_signature($payload, $_SERVER['HTTP_PADDLE_SIGNATURE'] ?? '', PADDLE_WEBHOOK_SECRET)) {
     http_response_code(400);
     exit('Invalid signature');
 }
 
 $event = json_decode($payload, true);
-$type = $event['type'] ?? '';
-$object = $event['data']['object'] ?? [];
+$type = $event['event_type'] ?? '';
+$txn = $event['data'] ?? [];
 
-if (str_starts_with($type, 'payment_intent.') && ($object['object'] ?? '') === 'payment_intent') {
-    if ($type === 'payment_intent.payment_failed') {
-        db()->prepare("UPDATE orders SET status = 'failed' WHERE stripe_payment_intent = ? AND status <> 'paid'")
-            ->execute([$object['id']]);
+if (str_starts_with($type, 'transaction.') && !empty($txn['id'])) {
+    if ($type === 'transaction.payment_failed') {
+        // A declined attempt; the buyer can retry on the same transaction, so only flag unpaid orders.
+        db()->prepare("UPDATE orders SET status = 'failed' WHERE paddle_transaction_id = ? AND status = 'pending'")
+            ->execute([$txn['id']]);
     } else {
-        sync_order_from_intent($object);
-    }
-}
-
-if ($type === 'invoice.paid' && ($object['object'] ?? '') === 'invoice') {
-    $stmt = db()->prepare('SELECT * FROM orders WHERE stripe_invoice_id = ?');
-    $stmt->execute([$object['id']]);
-    if ($order = $stmt->fetch()) {
-        db()->prepare("UPDATE orders SET status = 'paid', paid_at = COALESCE(paid_at, NOW()),
-                       invoice_number = ?, invoice_url = ?, invoice_pdf = ? WHERE id = ?")
-            ->execute([$object['number'], $object['hosted_invoice_url'], $object['invoice_pdf'], $order['id']]);
+        sync_order_from_transaction($txn);
     }
 }
 

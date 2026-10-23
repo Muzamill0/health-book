@@ -1,27 +1,26 @@
 (function () {
+  // Step 1: collect name + email and create the Paddle transaction on our server.
+  // Step 2: open Paddle's inline checkout for that transaction inside #paddle-checkout.
   var cfg = window.CHECKOUT;
-  var stripe = Stripe(cfg.publishableKey);
-  var elements = stripe.elements({
-    mode: 'payment',
-    amount: cfg.amount,
-    currency: cfg.currency,
-    // Card only — must match the invoice's payment_settings in create-payment.php.
-    paymentMethodTypes: ['card'],
-    appearance: {
-      theme: 'stripe',
-      variables: { colorPrimary: cfg.primary, borderRadius: '10px', fontFamily: 'Inter, system-ui, sans-serif' }
-    }
-  });
-  elements.create('payment', {
-    layout: 'tabs',
-    // Hide Apple Pay, Google Pay and Link so only the card form is shown.
-    wallets: { applePay: 'never', googlePay: 'never', link: 'never' }
-  }).mount('#payment-element');
-
   var form = document.getElementById('checkout-form');
   var btn = document.getElementById('pay-btn');
   var errBox = document.getElementById('pay-error');
+  var step = document.getElementById('paddle-step');
+  var who = document.getElementById('paddle-who');
   var btnLabel = btn.innerHTML;
+  var successUrl = null;
+
+  if (cfg.sandbox) Paddle.Environment.set('sandbox');
+  Paddle.Initialize({
+    token: cfg.clientToken,
+    eventCallback: function (ev) {
+      if (ev.name === 'checkout.completed' && successUrl) {
+        window.location.href = successUrl;
+      } else if (ev.name === 'checkout.error') {
+        showError((ev.data && ev.data.error && ev.data.error.detail) || 'The payment form could not be loaded. Please try again.');
+      }
+    }
+  });
 
   function showError(msg) {
     errBox.textContent = msg;
@@ -29,6 +28,16 @@
     btn.disabled = false;
     btn.innerHTML = btnLabel;
   }
+
+  function showForm() {
+    try { Paddle.Checkout.close(); } catch (e) {}
+    step.hidden = true;
+    form.hidden = false;
+    btn.disabled = false;
+    btn.innerHTML = btnLabel;
+  }
+
+  document.getElementById('edit-details').addEventListener('click', showForm);
 
   form.addEventListener('submit', async function (ev) {
     ev.preventDefault();
@@ -42,10 +51,7 @@
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { form.email.focus(); return showError('Please enter a valid email address.'); }
 
     btn.disabled = true;
-    btn.textContent = 'Processing…';
-
-    var submitted = await elements.submit();
-    if (submitted.error) return showError(submitted.error.message);
+    btn.textContent = 'Preparing secure payment…';
 
     var res, data;
     try {
@@ -54,22 +60,31 @@
       body.append('email', email);
       body.append('csrf', cfg.csrf);
       body.append('expected', cfg.amount);
-      res = await fetch(cfg.createUrl, { method: 'POST', body: body });
+      res = await fetch(cfg.createUrl, { method: 'POST', body: body, credentials: 'same-origin' });
       data = await res.json();
     } catch (e) {
       return showError('Could not start the payment. Please try again.');
     }
-    if (!res.ok || !data.clientSecret) return showError(data.error || 'Could not start the payment.');
+    if (!res.ok || !data.transactionId) return showError(data.error || 'Could not start the payment.');
 
-    var result = await stripe.confirmPayment({
-      elements: elements,
-      clientSecret: data.clientSecret,
-      confirmParams: {
-        return_url: data.returnUrl,
-        payment_method_data: { billing_details: { name: first + ' ' + last, email: email } }
+    successUrl = data.successUrl;
+    form.hidden = true;
+    step.hidden = false;
+    who.textContent = first + ' ' + last + ' · ' + email;
+
+    Paddle.Checkout.open({
+      transactionId: data.transactionId,
+      settings: {
+        displayMode: 'inline',
+        frameTarget: 'paddle-frame',
+        frameInitialHeight: 450,
+        frameStyle: 'width: 100%; min-width: 286px; background-color: transparent; border: none;',
+        variant: 'one-page',
+        allowedPaymentMethods: ['card'],
+        allowLogout: false,
+        showAddDiscounts: false,
+        successUrl: data.successUrl
       }
     });
-    // Only reached on an immediate error; otherwise Stripe redirects to return_url.
-    if (result.error) showError(result.error.message);
   });
 })();

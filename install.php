@@ -74,9 +74,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     order_type VARCHAR(20) NOT NULL DEFAULT 'bundle',
                     subtotal DECIMAL(10,2) DEFAULT NULL,
                     discount_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
+                    tax_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
                     amount DECIMAL(10,2) NOT NULL,
                     currency VARCHAR(10) NOT NULL,
                     status VARCHAR(20) NOT NULL DEFAULT 'pending',
+                    payment_provider VARCHAR(20) NOT NULL DEFAULT 'paddle',
+                    paddle_customer_id VARCHAR(100) DEFAULT NULL,
+                    paddle_transaction_id VARCHAR(100) DEFAULT NULL,
                     stripe_customer_id VARCHAR(100) DEFAULT NULL,
                     stripe_invoice_id VARCHAR(100) DEFAULT NULL,
                     invoice_number VARCHAR(100) DEFAULT NULL,
@@ -88,6 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     download_count INT NOT NULL DEFAULT 0,
                     INDEX (stripe_payment_intent),
                     INDEX (stripe_invoice_id),
+                    INDEX (paddle_transaction_id),
                     INDEX (referrer_id),
                     INDEX (status)
                 ) ENGINE=InnoDB;
@@ -189,7 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ['faq', 'How do I receive my cookbooks?', '', 'Right after checkout you will see a download button, and a receipt is emailed to you.', '', '', '', 2],
                     ['faq', 'Do I need special ingredients or equipment?', '', 'Not at all. The recipes use everyday ingredients and standard kitchen tools.', '', '', '', 3],
                     ['faq', 'Are the recipes suitable for vegetarians?', '', 'Yes. A full cookbook is dedicated to plant-based meals and many other recipes include vegetarian swaps.', '', '', '', 4],
-                    ['faq', 'Is my payment secure?', '', 'Payments are processed by Stripe, a world-leading payment provider. We never see or store your card details.', '', '', '', 5],
+                    ['faq', 'Is my payment secure?', '', 'Payments are processed securely by Paddle, our authorised reseller and merchant of record. We never see or store your card details.', '', '', '', 5],
                     ['faq', 'What if I am not happy with it?', '', 'You are covered by our 30-day money-back guarantee. Just email us and we will refund you.', '', '', '', 6],
                 ];
                 foreach ($seed as $row) {
@@ -224,7 +229,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $page = $pdo->prepare('INSERT INTO pages (slug, title, content, sort_order) VALUES (?,?,?,?)');
                 $page->execute(['contact', 'Contact Us', '<p>Have a question about your order? Email us at <a href="mailto:support@example.com">support@example.com</a> and we will reply within one business day.</p>', 1]);
                 $page->execute(['refund-policy', 'Refund Policy', '<p>We offer a 30-day money-back guarantee. If you are not satisfied with your purchase, contact us within 30 days for a full refund.</p>', 2]);
-                $page->execute(['privacy-policy', 'Privacy Policy', '<p>We only collect the information needed to process your order and send you your download. Payments are handled securely by Stripe. We never sell your data.</p>', 3]);
+                $page->execute(['privacy-policy', 'Privacy Policy', '<p>We only collect the information needed to process your order and send you your download. Payments are handled securely by Paddle, our merchant of record. We never sell your data.</p>', 3]);
                 $page->execute(['terms', 'Terms of Service', '<p>By purchasing you receive a personal, non-transferable licence to use the digital products. Redistribution or resale is not permitted.</p>', 4]);
             }
 

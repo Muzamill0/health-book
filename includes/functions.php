@@ -104,7 +104,7 @@ function discount_percent(): int
     return ($compare > $price && $compare > 0) ? (int) round(100 - ($price / $compare) * 100) : 0;
 }
 
-/** Currencies Stripe treats as having no minor unit. */
+/** Currencies with no minor unit (amounts are sent to the payment provider as whole units). */
 function to_minor_units(float $amount, string $currency): int
 {
     $zeroDecimal = ['bif', 'clp', 'djf', 'gnf', 'jpy', 'kmf', 'krw', 'mga', 'pyg', 'rwf', 'ugx', 'vnd', 'vuv', 'xaf', 'xof', 'xpf'];

@@ -41,7 +41,7 @@ $nav = function (string $href, string $label, bool $active) {
             <?= $nav('orders.php', '🧾 Orders', $current === 'orders.php') ?>
             <?= $nav('referrers.php', '🔗 Referral Links', $current === 'referrers.php') ?>
             <?= $nav('subscribers.php', '✉️ Subscribers', $current === 'subscribers.php') ?>
-            <?= $nav('stripe.php', '💳 Stripe Payments', $current === 'stripe.php') ?>
+            <?= $nav('payments.php', '💳 Paddle Payments', $current === 'payments.php') ?>
             <div class="nav-label">Account</div>
             <?= $nav('account.php', '🔑 Change Password', $current === 'account.php') ?>
             <a href="<?= e(url()) ?>" target="_blank">↗ View Website</a>

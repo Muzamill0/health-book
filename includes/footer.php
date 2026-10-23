@@ -29,7 +29,7 @@
         <div>
             <h4>Support</h4>
             <p><a href="mailto:<?= e(ts('contact_email')) ?>"><?= e(ts('contact_email')) ?></a></p>
-            <p class="payments">Secure payments by <strong>Stripe</strong></p>
+            <p class="payments">Secure payments by <strong>Paddle</strong></p>
         </div>
     </div>
     <div class="container footer__bottom">

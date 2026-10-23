@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new RuntimeException('Title is required.');
         }
         if ((float) $book['price'] < 0.5) {
-            throw new RuntimeException('Price must be at least 0.50 (Stripe minimum).');
+            throw new RuntimeException('Price must be at least 0.50 (card payment minimum).');
         }
         if (!empty($_POST['image_remove'])) {
             $book['image'] = '';

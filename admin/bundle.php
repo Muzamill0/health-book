@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($name === '') {
         $error = 'Bundle name is required.';
     } elseif ($chosen && $price < 0.5) {
-        $error = 'Bundle price must be at least 0.50 (Stripe minimum).';
+        $error = 'Bundle price must be at least 0.50 (card payment minimum).';
     } else {
         save_setting('bundle_name', $name);
         save_setting('price', number_format($price, 2, '.', ''));
