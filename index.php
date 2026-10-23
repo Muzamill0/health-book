@@ -264,6 +264,6 @@ require __DIR__ . '/includes/header.php';
 </div>
 <?php
 $extraScripts = '<script>window.CART = ' . json_encode(['url' => url('cart.php'), 'csrf' => csrf_token(), 'bundleUrl' => url('checkout.php?bundle=1')] + cart_public($cart), JSON_HEX_TAG | JSON_HEX_AMP) . ';</script>'
-    . '<script src="' . e(url('assets/js/cart.js')) . '"></script>';
+    . '<script src="' . e(asset('assets/js/cart.js')) . '"></script>';
 require __DIR__ . '/includes/footer.php';
 ?>

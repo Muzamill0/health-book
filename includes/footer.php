@@ -37,7 +37,7 @@
         <p><?= e(str_replace('{year}', date('Y'), setting('copyright'))) ?></p>
     </div>
 </footer>
-<script src="<?= e(url('assets/js/main.js')) ?>"></script>
+<script src="<?= e(asset('assets/js/main.js')) ?>"></script>
 <?= $extraScripts ?? '' ?>
 </body>
 </html>

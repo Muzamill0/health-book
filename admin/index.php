@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Admin login · <?= e(setting('site_name')) ?></title>
-<link rel="stylesheet" href="admin.css">
+<link rel="stylesheet" href="<?= e(asset('admin/admin.css')) ?>">
 </head>
 <body class="login-body">
 <form class="login-card" method="post">

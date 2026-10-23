@@ -43,7 +43,7 @@ if ($paddleReady && !$isEmpty) {
     ];
     $extraScripts = '<script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>'
         . '<script>window.CHECKOUT = ' . json_encode($config, JSON_HEX_TAG | JSON_HEX_AMP) . ';</script>'
-        . '<script src="' . e(url('assets/js/checkout.js')) . '"></script>';
+        . '<script src="' . e(asset('assets/js/checkout.js')) . '"></script>';
 }
 $showItems = $summary['type'] === 'bundle' ? array_slice($summary['items'], 0, 4) : $summary['items'];
 

@@ -92,6 +92,13 @@ function url(string $path = ''): string
     return BASE_URL . '/' . ltrim($path, '/');
 }
 
+/** URL of a local CSS/JS file with a version that changes whenever the file changes (beats browser/CDN caching). */
+function asset(string $path): string
+{
+    $file = __DIR__ . '/../' . ltrim($path, '/');
+    return url($path) . (is_file($file) ? '?v=' . filemtime($file) : '');
+}
+
 function money(float $amount): string
 {
     return setting('currency_symbol', '$') . number_format($amount, 2);

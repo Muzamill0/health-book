@@ -15,7 +15,7 @@ $messages = array_values(array_filter(array_map('trim', explode("\n", ts('announ
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="<?= e(url('assets/css/style.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('assets/css/style.css')) ?>">
 <style>
 :root{
   --primary: <?= e(ts('color_primary')) ?>;

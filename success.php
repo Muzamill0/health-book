@@ -77,7 +77,7 @@ require __DIR__ . '/includes/header.php';
                     // Start the download automatically on the first visit only.
                     'auto'  => $counts ? null : (count($ready) > 1 ? 'all' : array_key_first($ready)),
                     'names' => array_map(fn ($f) => $f['filename'], $ready),
-                ], JSON_HEX_TAG | JSON_HEX_AMP) . ';</script><script src="' . e(url('assets/js/download.js')) . '"></script>'; ?>
+                ], JSON_HEX_TAG | JSON_HEX_AMP) . ';</script><script src="' . e(asset('assets/js/download.js')) . '"></script>'; ?>
                 <?php if (count($ready) > 1): ?>
                     <button type="button" class="btn btn-lg" data-download="all">⬇ Download all (<?= count($ready) ?> files, ZIP)</button>
                 <?php endif; ?>

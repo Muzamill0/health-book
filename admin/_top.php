@@ -15,7 +15,7 @@ $nav = function (string $href, string $label, bool $active) {
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title><?= e($adminTitle ?? 'Admin') ?> · <?= e(setting('site_name')) ?> Admin</title>
-<link rel="stylesheet" href="<?= e(url('admin/admin.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('admin/admin.css')) ?>">
 </head>
 <body>
 <div class="admin">
