@@ -1,15 +1,24 @@
 <?php
-require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/paddle.php';
+require_admin();
 $adminTitle = 'Dashboard';
+
+// Catch payments whose redirect or webhook never reached us.
+$justPaid = paddle_sync_pending();
+if ($justPaid) {
+    flash($justPaid . ' Paddle payment' . ($justPaid === 1 ? '' : 's') . ' confirmed and marked as paid.');
+}
+
+// Revenue and orders come from Paddle only (older Stripe test orders are left out).
 
 $stats = db()->query("SELECT
     COUNT(*) AS total,
     SUM(status = 'paid') AS paid,
     COALESCE(SUM(CASE WHEN status = 'paid' THEN amount END), 0) AS revenue,
     COALESCE(SUM(CASE WHEN status = 'paid' AND paid_at >= CURDATE() THEN amount END), 0) AS today
-    FROM orders")->fetch();
+    FROM orders WHERE payment_provider = 'paddle'")->fetch();
 $subs = (int) db()->query('SELECT COUNT(*) FROM subscribers')->fetchColumn();
-$recent = db()->query('SELECT o.*, r.name AS referrer_name FROM orders o LEFT JOIN referrers r ON r.id = o.referrer_id ORDER BY o.id DESC LIMIT 8')->fetchAll();
+$recent = db()->query('SELECT o.*, r.name AS referrer_name FROM orders o LEFT JOIN referrers r ON r.id = o.referrer_id WHERE o.payment_provider = \'paddle\' ORDER BY o.id DESC LIMIT 8')->fetchAll();
 $sym = setting('currency_symbol');
 
 require __DIR__ . '/_top.php';

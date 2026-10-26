@@ -120,6 +120,34 @@ function paddle_invoice_url(string $transactionId): ?string
     }
 }
 
+/**
+ * Re-check recent unpaid Paddle orders against Paddle and update them.
+ * A safety net for when the buyer's redirect or the webhook didn't reach us.
+ * Returns how many orders became paid.
+ */
+function paddle_sync_pending(int $limit = 20): int
+{
+    if (PADDLE_API_KEY === '') {
+        return 0;
+    }
+    $stmt = db()->prepare("SELECT * FROM orders WHERE payment_provider = 'paddle' AND paddle_transaction_id IS NOT NULL
+                           AND status IN ('pending', 'failed', 'processing') AND created_at >= NOW() - INTERVAL 14 DAY
+                           ORDER BY id DESC LIMIT " . max(1, $limit));
+    $stmt->execute();
+    $paid = 0;
+    foreach ($stmt->fetchAll() as $order) {
+        try {
+            $synced = sync_order_from_transaction(paddle_request('GET', 'transactions/' . $order['paddle_transaction_id']));
+            if ($synced && $synced['status'] === 'paid') {
+                $paid++;
+            }
+        } catch (RuntimeException $ex) {
+            error_log('Paddle sync failed for ' . $order['order_no'] . ': ' . $ex->getMessage());
+        }
+    }
+    return $paid;
+}
+
 /** Update an order from a Paddle transaction object (from the API or a webhook). */
 function sync_order_from_transaction(array $txn): ?array
 {

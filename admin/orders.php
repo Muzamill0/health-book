@@ -1,8 +1,20 @@
 <?php
-require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/paddle.php';
 require_admin();
 
+if (!isset($_GET['export'])) {
+    $justPaid = paddle_sync_pending(isset($_GET['sync']) ? 100 : 20);
+    if (isset($_GET['sync'])) {
+        flash($justPaid ? $justPaid . ' order' . ($justPaid === 1 ? '' : 's') . ' confirmed as paid by Paddle.' : 'Checked with Paddle — no new payments found.');
+        redirect('orders.php');
+    }
+    if ($justPaid) {
+        flash($justPaid . ' Paddle payment' . ($justPaid === 1 ? '' : 's') . ' confirmed and marked as paid.');
+    }
+}
+
 $status = $_GET['status'] ?? '';
+$provider = $_GET['provider'] ?? 'paddle';
 $q = trim((string) ($_GET['q'] ?? ''));
 $ref = (string) ($_GET['ref'] ?? '');
 $where = [];
@@ -14,6 +26,10 @@ if ($status !== '') {
 if ($q !== '') {
     $where[] = '(o.order_no LIKE ? OR o.customer_email LIKE ? OR o.customer_name LIKE ? OR o.invoice_number LIKE ?)';
     array_push($args, "%$q%", "%$q%", "%$q%", "%$q%");
+}
+if ($provider !== 'all') {
+    $where[] = 'o.payment_provider = ?';
+    $args[] = $provider === 'stripe' ? 'stripe' : 'paddle';
 }
 if ($ref === 'direct') {
     $where[] = 'o.referrer_id IS NULL';
@@ -57,8 +73,14 @@ require __DIR__ . '/_top.php';
                 <option value="<?= (int) $rf['id'] ?>" <?= $ref === (string) $rf['id'] ? 'selected' : '' ?>><?= e($rf['name']) ?></option>
             <?php endforeach; ?>
         </select>
+        <select name="provider">
+            <option value="paddle" <?= $provider === 'paddle' ? 'selected' : '' ?>>Paddle orders</option>
+            <option value="stripe" <?= $provider === 'stripe' ? 'selected' : '' ?>>Old Stripe orders</option>
+            <option value="all" <?= $provider === 'all' ? 'selected' : '' ?>>All providers</option>
+        </select>
         <button class="btn btn-light">Filter</button>
-        <a class="btn btn-light" href="?<?= e(http_build_query(['q' => $q, 'status' => $status, 'ref' => $ref, 'export' => 'csv'])) ?>">Export CSV</a>
+        <a class="btn btn-light" href="?sync=1">↻ Sync with Paddle</a>
+        <a class="btn btn-light" href="?<?= e(http_build_query(['q' => $q, 'status' => $status, 'ref' => $ref, 'provider' => $provider, 'export' => 'csv'])) ?>">Export CSV</a>
     </form>
     <p class="muted"><small>“Pending” orders are checkouts that were started but not paid.</small></p>
     <?php include __DIR__ . '/_orders_table.php'; ?>

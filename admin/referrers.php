@@ -70,12 +70,12 @@ $rows = db()->query("SELECT r.*,
         COALESCE(SUM(o.status = 'paid'), 0) AS sales,
         COALESCE(SUM(CASE WHEN o.status = 'paid' THEN o.amount END), 0) AS revenue
     FROM referrers r
-    LEFT JOIN orders o ON o.referrer_id = r.id
+    LEFT JOIN orders o ON o.referrer_id = r.id AND o.payment_provider = 'paddle'
     GROUP BY r.id
     ORDER BY revenue DESC, r.name")->fetchAll();
 $direct = db()->query("SELECT COALESCE(SUM(status = 'paid'), 0) AS sales,
         COALESCE(SUM(CASE WHEN status = 'paid' THEN amount END), 0) AS revenue
-    FROM orders WHERE referrer_id IS NULL")->fetch();
+    FROM orders WHERE referrer_id IS NULL AND payment_provider = 'paddle'")->fetch();
 $sym = setting('currency_symbol');
 $days = (int) setting('referral_cookie_days', '30');
 
