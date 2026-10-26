@@ -103,7 +103,7 @@ require __DIR__ . '/includes/header.php';
                         <button type="button" class="link-btn" id="edit-details">Edit details</button>
                     </div>
                     <p class="muted paddle-step__who" id="paddle-who"></p>
-                    <div class="paddle-frame" id="paddle-checkout"></div>
+                    <div class="hb-paddle-checkout" id="paddle-checkout"></div>
                 </div>
                 <p class="pay-error" id="pay-error" role="alert"></p>
                 <div class="secure-row">

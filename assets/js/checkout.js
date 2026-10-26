@@ -99,7 +99,7 @@
       transactionId: data.transactionId,
       settings: {
         displayMode: 'inline',
-        frameTarget: 'paddle-frame',
+        frameTarget: 'hb-paddle-checkout', // must not be "paddle-frame": Paddle removes elements with that class
         frameInitialHeight: 450,
         frameStyle: 'width: 100%; min-width: 286px; background-color: transparent; border: none;',
         variant: 'one-page',
