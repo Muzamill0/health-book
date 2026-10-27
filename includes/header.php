@@ -55,9 +55,10 @@ $messages = array_values(array_filter(array_map('trim', explode("\n", ts('announ
         </a>
         <button class="nav-toggle" aria-label="Menu" aria-expanded="false" data-nav-toggle>☰</button>
         <nav class="nav" data-nav>
-            <a href="<?= e(url('#features')) ?>">Why It Works</a>
+            <?php if (setting('features_enabled') === '1'): ?><a href="<?= e(url('#features')) ?>">Why It Works</a><?php endif; ?>
             <a href="<?= e(url('#inside')) ?>">What’s Inside</a>
-            <a href="<?= e(url('#bonuses')) ?>">Bonuses</a>
+            <?php if (setting('bonuses_enabled') === '1'): ?><a href="<?= e(url('#bonuses')) ?>">Bonuses</a><?php endif; ?>
+            <?php if (setting('comparison_enabled') === '1'): ?><a href="<?= e(url('#results')) ?>">Results</a><?php endif; ?>
             <a href="<?= e(url('#reviews')) ?>">Reviews</a>
             <a href="<?= e(url('#faq')) ?>">FAQ</a>
             <?php $headerCart = cart_get(); $headerCount = $headerCart['bundle'] ? count(bundle_books()) : count($headerCart['books']); ?>

@@ -99,6 +99,23 @@ function asset(string $path): string
     return url($path) . (is_file($file) ? '?v=' . filemtime($file) : '');
 }
 
+/**
+ * Admin-written text as safe HTML: blank lines start a new paragraph, single line breaks are kept,
+ * and **double stars** make text bold. Everything else is escaped.
+ */
+function rich_text(string $text): string
+{
+    $html = '';
+    foreach (preg_split('/\R\s*\R/', trim($text)) as $para) {
+        if (trim($para) === '') {
+            continue;
+        }
+        $safe = nl2br(e(trim($para)));
+        $html .= '<p>' . preg_replace('/\*\*(.+?)\*\*/s', '<strong>$1</strong>', $safe) . '</p>';
+    }
+    return $html;
+}
+
 function money(float $amount): string
 {
     return setting('currency_symbol', '$') . number_format($amount, 2);

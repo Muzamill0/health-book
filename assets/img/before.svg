@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" width="600" height="800">
+  <rect width="600" height="800" fill="#d9d6cf"/>
+  <rect y="620" width="600" height="180" fill="#5a5148" fill-opacity=".35"/>
+  <g fill="#3a4250">
+    <circle cx="300" cy="150" r="56"/>
+    <rect x="175" y="225" width="250" height="300" rx="110"/>
+    <rect x="200" y="470" width="88" height="200" rx="40"/>
+    <rect x="312" y="470" width="88" height="200" rx="40"/>
+    <rect x="135" y="250" width="58" height="210" rx="29"/>
+    <rect x="407" y="250" width="58" height="210" rx="29"/>
+  </g>
+  <rect x="190" y="660" width="100" height="30" rx="14" fill="#e9e6ef"/>
+  <rect x="310" y="660" width="100" height="30" rx="14" fill="#e9e6ef"/>
+  <text x="300" y="765" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" fill="#000" fill-opacity=".45">Test image — replace in Admin</text>
+</svg>

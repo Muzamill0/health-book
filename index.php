@@ -94,7 +94,7 @@ require __DIR__ . '/includes/header.php';
     </div>
 </section>
 
-<?php if ($features): ?>
+<?php if ($features && setting('features_enabled') === '1'): ?>
 <section class="section section--sage" id="features">
     <div class="container">
         <div class="section__head">
@@ -157,7 +157,7 @@ require __DIR__ . '/includes/header.php';
 </section>
 <?php endif; ?>
 
-<?php if ($bonuses): ?>
+<?php if ($bonuses && setting('bonuses_enabled') === '1'): ?>
 <section class="section section--dark" id="bonuses">
     <div class="container">
         <div class="section__head">
@@ -177,6 +177,32 @@ require __DIR__ . '/includes/header.php';
                 </div>
             </article>
             <?php endforeach; ?>
+        </div>
+    </div>
+</section>
+<?php endif; ?>
+
+<?php if (setting('comparison_enabled') === '1' && (setting('comparison_before_image') || setting('comparison_after_image'))):
+    $compareLink = setting('comparison_button_link') !== '' ? setting('comparison_button_link') : url('checkout.php?bundle=1'); ?>
+<section class="section comparison" id="results">
+    <div class="container comparison__grid">
+        <div class="comparison__images">
+            <?php foreach (['before', 'after'] as $side):
+                $img = setting('comparison_' . $side . '_image');
+                $label = ts('comparison_' . $side . '_label');
+                if ($img === '') continue; ?>
+            <figure class="comparison__img">
+                <img src="<?= e(img_url($img)) ?>" alt="<?= e($label ?: ucfirst($side)) ?>" loading="lazy">
+                <?php if ($label !== ''): ?><figcaption class="comparison__label comparison__label--<?= $side ?>"><?= e($label) ?></figcaption><?php endif; ?>
+            </figure>
+            <?php endforeach; ?>
+        </div>
+        <div class="comparison__text">
+            <?php if (ts('comparison_heading') !== ''): ?><h2><?= e(ts('comparison_heading')) ?></h2><?php endif; ?>
+            <?= rich_text(ts('comparison_text')) ?>
+            <?php if (setting('comparison_button_text') !== ''): ?>
+                <a class="btn btn-lg" href="<?= e($compareLink) ?>"><?= e(ts('comparison_button_text')) ?></a>
+            <?php endif; ?>
         </div>
     </div>
 </section>

@@ -65,6 +65,8 @@ return [
     'sections' => [
         'label' => 'Section Headings',
         'fields' => [
+            'features_enabled'     => ['label' => 'Show the "Why you\'ll love it" section', 'type' => 'toggle', 'default' => '0'],
+            'bonuses_enabled'      => ['label' => 'Show the Bonuses section', 'type' => 'toggle', 'default' => '0'],
             'features_heading'     => ['label' => '"Why you\'ll love it" heading', 'type' => 'text', 'default' => 'Why You’ll Love This Bundle'],
             'features_subheading'  => ['label' => '"Why you\'ll love it" intro', 'type' => 'textarea', 'default' => 'Everything you need to start eating in a way that helps your body feel calmer, lighter and more energised.'],
             'books_heading'        => ['label' => '"What\'s inside" heading', 'type' => 'text', 'default' => 'What’s Inside the Bundle'],
@@ -73,6 +75,20 @@ return [
             'bonuses_subheading'   => ['label' => 'Bonuses intro', 'type' => 'textarea', 'default' => 'Order today and these extras are included at no additional cost.'],
             'testimonials_heading' => ['label' => 'Reviews heading', 'type' => 'text', 'default' => 'Loved by Home Cooks Everywhere'],
             'faq_heading'          => ['label' => 'FAQ heading', 'type' => 'text', 'default' => 'Frequently Asked Questions'],
+        ],
+    ],
+    'comparison' => [
+        'label' => 'Before / After Section',
+        'fields' => [
+            'comparison_enabled'      => ['label' => 'Show the before / after section', 'type' => 'toggle', 'default' => '1'],
+            'comparison_before_image' => ['label' => 'Before image', 'type' => 'image', 'default' => 'assets/img/before.svg'],
+            'comparison_after_image'  => ['label' => 'After image', 'type' => 'image', 'default' => 'assets/img/after.svg'],
+            'comparison_before_label' => ['label' => 'Before label (leave empty to hide)', 'type' => 'text', 'default' => 'Before'],
+            'comparison_after_label'  => ['label' => 'After label (leave empty to hide)', 'type' => 'text', 'default' => 'After'],
+            'comparison_heading'      => ['label' => 'Heading (optional)', 'type' => 'text', 'default' => ''],
+            'comparison_text'         => ['label' => 'Text — leave an empty line between paragraphs; wrap words in **double stars** to make them bold', 'type' => 'textarea', 'default' => "The **28-Day Meal Plan** walks you step by step into a calmer, more balanced way of eating. Each week brings simple whole-food recipes, colourful produce, healthy fats and satisfying proteins, all built around anti-inflammatory ingredients.\n\nClear weekly guidance, ready-made shopping lists and practical tips help you build habits that last, without strict rules or complicated tracking.\n\nIt is ideal for anyone who wants to feel lighter, enjoy nourishing food and make healthier eating feel effortless."],
+            'comparison_button_text'  => ['label' => 'Button text (leave empty to hide the button)', 'type' => 'text', 'default' => 'Start Your Journey Now'],
+            'comparison_button_link'  => ['label' => 'Button link (leave empty to open the bundle checkout)', 'type' => 'text', 'default' => ''],
         ],
     ],
     'value' => [
