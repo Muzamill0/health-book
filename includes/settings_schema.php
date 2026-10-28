@@ -117,7 +117,7 @@ return [
         'fields' => [
             'delivery_file'     => ['label' => 'Complete-bundle extra PDF (bonuses — only complete-bundle buyers get it; each book has its own PDF under Books)', 'type' => 'file', 'default' => ''],
             'delivery_filename' => ['label' => 'File name for the complete-bundle extra PDF', 'type' => 'text', 'default' => 'Bundle-Bonuses.pdf'],
-            'download_limit'    => ['label' => 'Max downloads per file, per order (0 = unlimited)', 'type' => 'text', 'default' => '10'],
+            'download_limit'    => ['label' => 'Max downloads per file, per order (0 = unlimited)', 'type' => 'text', 'default' => '2'],
             'download_url'      => ['label' => 'External URL for the complete-bundle extra PDF (only used if none is uploaded; buyers never see this link)', 'type' => 'text', 'default' => ''],
             'thankyou_heading'  => ['label' => 'Thank-you page heading', 'type' => 'text', 'default' => 'Thank you for your order!'],
             'thankyou_text'     => ['label' => 'Thank-you page text', 'type' => 'textarea', 'default' => 'Your payment was successful. Your cookbooks are downloading now — you can also download each one below.'],

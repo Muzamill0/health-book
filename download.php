@@ -66,7 +66,7 @@ if ($order['status'] !== 'paid') {
 
 $files = order_files($order);
 $counts = order_download_counts((int) $order['id']);
-$limit = (int) setting('download_limit', '10');
+$limit = (int) setting('download_limit', '2');
 $underLimit = fn (string $key) => $limit <= 0 || (int) ($counts[$key] ?? 0) < $limit;
 $key = (string) ($_POST['file'] ?? '');
 

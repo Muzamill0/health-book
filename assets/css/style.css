@@ -63,6 +63,13 @@ p { margin: 0 0 1em; }
 .hero__image { position: relative; background: var(--sage); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
 .hero__image img { width: 100%; aspect-ratio: 1; object-fit: cover; }
 .sale-badge { position: absolute; top: 16px; left: 16px; background: var(--primary); color: #fff; font-weight: 700; padding: .35em .8em; border-radius: 999px; font-size: .9rem; z-index: 1; }
+.hero-slider { position: relative; overflow: hidden; }
+.hero-slider__track { display: flex; transition: transform .6s ease; }
+.hero-slider__slide { flex: 0 0 100%; width: 100%; aspect-ratio: 1; object-fit: cover; }
+.hero-slider__dots { position: absolute; left: 0; right: 0; bottom: 12px; display: flex; justify-content: center; gap: 8px; z-index: 1; }
+.hero-slider__dots button { width: 9px; height: 9px; padding: 0; border: 0; border-radius: 999px; background: rgba(255,255,255,.65); box-shadow: 0 0 0 1px rgba(0,0,0,.15); cursor: pointer; transition: width .2s, background .2s; }
+.hero-slider__dots button.is-active { width: 22px; background: var(--primary); }
+.hero__mobile-media { display: none; }
 .hero__thumbs { display: flex; gap: 10px; margin-top: 12px; overflow-x: auto; }
 .thumb { flex: 0 0 72px; height: 72px; border: 2px solid transparent; border-radius: 10px; padding: 0; overflow: hidden; cursor: pointer; background: var(--sage); }
 .thumb.is-active { border-color: var(--primary); }
@@ -260,7 +267,8 @@ input:focus, textarea:focus { outline: 2px solid color-mix(in srgb, var(--primar
 @media (max-width: 860px) {
   .hero__grid, .checkout__grid { grid-template-columns: 1fr; gap: 32px; }
   .hero__media, .summary { position: static; }
-  .hero__info { order: -1; } /* mobile: text first, picture below */
+  .hero__media { display: none; } /* mobile: the slider sits under the heading instead */
+  .hero__mobile-media { display: block; margin: 0 0 1.2rem; }
   .comparison__grid { grid-template-columns: 1fr; gap: 28px; }
   .comparison__text { max-width: none; }
   .grid-3, .grid-2 { grid-template-columns: 1fr; }

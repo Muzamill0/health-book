@@ -29,19 +29,43 @@ if (setting('countdown_enabled') === '1') {
 require __DIR__ . '/includes/header.php';
 ?>
 
+<?php
+// Product images: the main image followed by Admin → Product Gallery images.
+$slides = [['src' => img_url(setting('product_image')), 'alt' => ts('product_title')]];
+foreach ($gallery as $g) {
+    if ($g['image'] !== '') {
+        $slides[] = ['src' => img_url($g['image']), 'alt' => $g['title']];
+    }
+}
+// Auto-sliding image carousel (assets/js/main.js); shown beside the text on desktop, under the heading on mobile.
+$renderSlider = function (string $class) use ($slides, $off) { ?>
+    <div class="<?= e($class) ?> hero-slider" data-slider>
+        <?php if ($off): ?><span class="sale-badge">-<?= $off ?>%</span><?php endif; ?>
+        <div class="hero-slider__track">
+            <?php foreach ($slides as $i => $sl): ?>
+                <img class="hero-slider__slide" src="<?= e($sl['src']) ?>" alt="<?= e($sl['alt']) ?>" <?= $i ? 'loading="lazy"' : '' ?>>
+            <?php endforeach; ?>
+        </div>
+        <?php if (count($slides) > 1): ?>
+        <div class="hero-slider__dots">
+            <?php foreach ($slides as $i => $sl): ?>
+                <button type="button" class="<?= $i === 0 ? 'is-active' : '' ?>" data-dot="<?= $i ?>" aria-label="Image <?= $i + 1 ?>"></button>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+    </div>
+<?php };
+?>
+
 <!-- Product hero -->
 <section class="hero">
     <div class="container hero__grid">
         <div class="hero__media">
-            <div class="hero__image">
-                <?php if ($off): ?><span class="sale-badge">-<?= $off ?>%</span><?php endif; ?>
-                <img src="<?= e(img_url(setting('product_image'))) ?>" alt="<?= e(ts('product_title')) ?>" data-main-image>
-            </div>
-            <?php if ($gallery): ?>
+            <?php $renderSlider('hero__image'); ?>
+            <?php if (count($slides) > 1): ?>
             <div class="hero__thumbs">
-                <button type="button" class="thumb is-active" data-thumb="<?= e(img_url(setting('product_image'))) ?>"><img src="<?= e(img_url(setting('product_image'))) ?>" alt=""></button>
-                <?php foreach ($gallery as $g): ?>
-                    <button type="button" class="thumb" data-thumb="<?= e(img_url($g['image'])) ?>"><img src="<?= e(img_url($g['image'])) ?>" alt="<?= e($g['title']) ?>"></button>
+                <?php foreach ($slides as $i => $sl): ?>
+                    <button type="button" class="thumb<?= $i === 0 ? ' is-active' : '' ?>" data-slide-to="<?= $i ?>" aria-label="Show image <?= $i + 1 ?>"><img src="<?= e($sl['src']) ?>" alt=""></button>
                 <?php endforeach; ?>
             </div>
             <?php endif; ?>
@@ -50,6 +74,7 @@ require __DIR__ . '/includes/header.php';
         <div class="hero__info">
             <?php if (setting('product_badge')): ?><span class="eyebrow"><?= e(ts('product_badge')) ?></span><?php endif; ?>
             <h1><?= e(ts('product_title')) ?></h1>
+            <div class="hero__mobile-media"><?php $renderSlider('hero__image'); ?></div>
             <div class="rating">
                 <span class="stars"><?= stars((float) setting('product_rating')) ?></span>
                 <span><?= e(ts('product_rating')) ?></span>

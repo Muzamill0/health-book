@@ -65,8 +65,14 @@ require __DIR__ . '/includes/header.php';
             <?php
             $files = order_files($order);
             $counts = order_download_counts((int) $order['id']);
-            $limit = (int) setting('download_limit', '10');
+            $limit = (int) setting('download_limit', '2');
             $ready = array_filter($files, fn ($f) => $f['path'] !== '' || $f['url'] !== '');
+            // Downloads left per file (null = unlimited); files at the limit can't be downloaded again.
+            $left = [];
+            foreach ($ready as $key => $f) {
+                $left[$key] = $limit > 0 ? max(0, $limit - (int) ($counts[$key] ?? 0)) : null;
+            }
+            $available = array_filter($left, fn ($n) => $n === null || $n > 0);
             if ($ready):
                 $extraScripts = '<script>window.DOWNLOAD = ' . json_encode([
                     'url'   => url('download.php'),
@@ -75,29 +81,29 @@ require __DIR__ . '/includes/header.php';
                     'csrf'  => csrf_token(),
                     'zipName' => preg_replace('/[^A-Za-z0-9]+/', '-', setting('site_name')) . '-' . $order['order_no'] . '.zip',
                     // Start the download automatically on the first visit only.
-                    'auto'  => $counts ? null : (count($ready) > 1 ? 'all' : array_key_first($ready)),
+                    'auto'  => $counts || !$available ? null : (count($available) > 1 ? 'all' : array_key_first($available)),
                     'names' => array_map(fn ($f) => $f['filename'], $ready),
+                    'left'  => $left,
                 ], JSON_HEX_TAG | JSON_HEX_AMP) . ';</script><script src="' . e(asset('assets/js/download.js')) . '"></script>'; ?>
-                <?php if (count($ready) > 1): ?>
-                    <button type="button" class="btn btn-lg" data-download="all">⬇ Download all (<?= count($ready) ?> files, ZIP)</button>
+                <?php if (count($available) > 1): ?>
+                    <button type="button" class="btn btn-lg" data-download="all" data-zip>⬇ Download all (<?= count($available) ?> files, ZIP)</button>
                 <?php endif; ?>
                 <p class="download-status" data-download-status role="status"></p>
                 <ul class="files">
-                    <?php foreach ($files as $key => $f):
-                        $used = (int) ($counts[$key] ?? 0); ?>
-                        <li>
+                    <?php foreach ($files as $key => $f): ?>
+                        <li data-file="<?= e($key) ?>">
                             <span>📘 <?= e($f['title']) ?></span>
                             <?php if (!isset($ready[$key])): ?>
                                 <small class="muted">Coming soon</small>
-                            <?php elseif ($limit > 0 && $used >= $limit): ?>
+                            <?php elseif ($left[$key] === 0): ?>
                                 <small class="muted">Download limit reached</small>
                             <?php else: ?>
-                                <button type="button" class="btn btn-sm btn-light" data-download="<?= e($key) ?>">⬇ Download</button>
+                                <button type="button" class="btn btn-sm btn-light" data-download="<?= e($key) ?>">⬇ Download<?= $left[$key] !== null ? ' (' . $left[$key] . ' left)' : '' ?></button>
                             <?php endif; ?>
                         </li>
                     <?php endforeach; ?>
                 </ul>
-                <p class="muted" style="font-size:.9rem">Bookmark this page — you can come back to download again<?= $limit > 0 ? ' (up to ' . $limit . ' times per file)' : '' ?>.</p>
+                <p class="muted" style="font-size:.9rem">Bookmark this page — you can come back to download again<?= $limit > 0 ? ' — each file can be downloaded ' . ($limit === 1 ? 'once' : $limit . ' times') . ' in total' : '' ?>.</p>
             <?php else: ?>
                 <p class="muted">Your files are being prepared and will be available on this page shortly.</p>
             <?php endif; ?>

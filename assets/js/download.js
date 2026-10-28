@@ -11,6 +11,30 @@
     status.classList.toggle('is-error', !!isError);
   }
 
+  // Count a finished download and update the buttons: "(N left)", "Download limit reached", hide the ZIP button.
+  function used(file) {
+    if (!cfg.left) return;
+    var keys = file === 'all' ? Object.keys(cfg.left).filter(function (k) { return cfg.left[k] === null || cfg.left[k] > 0; }) : [file];
+    keys.forEach(function (k) {
+      if (cfg.left[k] === null) return;
+      cfg.left[k] = Math.max(0, cfg.left[k] - 1);
+      var row = document.querySelector('[data-file="' + k + '"]');
+      var b = row && row.querySelector('[data-download]');
+      if (!b) return;
+      if (cfg.left[k] === 0) {
+        var note = document.createElement('small');
+        note.className = 'muted';
+        note.textContent = 'Download limit reached';
+        b.replaceWith(note);
+      } else {
+        b.textContent = '⬇ Download (' + cfg.left[k] + ' left)';
+      }
+    });
+    var zip = document.querySelector('[data-zip]');
+    var stillAvailable = Object.keys(cfg.left).filter(function (k) { return cfg.left[k] === null || cfg.left[k] > 0; }).length;
+    if (zip && stillAvailable < 2) zip.remove();
+  }
+
   async function download(file, btn) {
     if (busy) return;
     busy = true;
@@ -39,11 +63,16 @@
       a.remove();
       setTimeout(function () { URL.revokeObjectURL(tmp); }, 10000);
       setStatus('✓ Your download has started. Check your Downloads folder.');
+      used(file);
     } catch (e) {
       setStatus(e.message, true);
     } finally {
       busy = false;
-      if (btn) { btn.disabled = false; btn.innerHTML = label; }
+      if (btn && btn.isConnected) {
+        btn.disabled = false;
+        // used() may have changed the label ("N left"); keep it, otherwise restore the original.
+        if (btn.textContent === 'Preparing…') btn.innerHTML = label;
+      }
     }
   }
 

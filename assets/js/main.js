@@ -48,14 +48,45 @@
     });
   }
 
-  // Product gallery thumbnails
-  var main = document.querySelector('[data-main-image]');
-  document.querySelectorAll('[data-thumb]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      main.src = btn.dataset.thumb;
-      document.querySelectorAll('[data-thumb]').forEach(function (b) { b.classList.remove('is-active'); });
-      btn.classList.add('is-active');
+  // Product image sliders: auto-advance every 4 seconds, dots, desktop thumbnails and touch swipe.
+  document.querySelectorAll('[data-slider]').forEach(function (slider) {
+    var track = slider.querySelector('.hero-slider__track');
+    var count = track.children.length;
+    if (count < 2) return;
+    var dots = slider.querySelectorAll('[data-dot]');
+    var thumbs = slider.parentElement.querySelectorAll('[data-slide-to]');
+    var index = 0, timer = null, paused = false;
+
+    function go(i) {
+      index = (i + count) % count;
+      track.style.transform = 'translateX(' + (-100 * index) + '%)';
+      dots.forEach(function (d, n) { d.classList.toggle('is-active', n === index); });
+      thumbs.forEach(function (t, n) { t.classList.toggle('is-active', n === index); });
+    }
+    function restart() {
+      clearInterval(timer);
+      timer = setInterval(function () {
+        // Only move when visible and not being touched/hovered.
+        if (!paused && !document.hidden && slider.offsetParent !== null) go(index + 1);
+      }, 4000);
+    }
+
+    dots.forEach(function (d) { d.addEventListener('click', function () { go(+d.dataset.dot); restart(); }); });
+    thumbs.forEach(function (t) { t.addEventListener('click', function () { go(+t.dataset.slideTo); restart(); }); });
+    slider.addEventListener('mouseenter', function () { paused = true; });
+    slider.addEventListener('mouseleave', function () { paused = false; });
+
+    var startX = null;
+    slider.addEventListener('touchstart', function (e) { startX = e.touches[0].clientX; paused = true; }, { passive: true });
+    slider.addEventListener('touchend', function (e) {
+      paused = false;
+      if (startX === null) return;
+      var dx = e.changedTouches[0].clientX - startX;
+      if (Math.abs(dx) > 40) { go(index + (dx < 0 ? 1 : -1)); restart(); }
+      startX = null;
     });
+
+    restart();
   });
 
   // Countdown ("daily" resets at local midnight, otherwise an ISO end date)
