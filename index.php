@@ -113,7 +113,7 @@ $renderSlider = function (string $class) use ($slides, $off) { ?>
             <?php else: ?>
             <a class="btn btn-lg btn-block" href="<?= e(url('#inside')) ?>">Choose your cookbooks</a>
             <?php endif; ?>
-            <p class="guarantee">🔒 <?= e(ts('guarantee_text')) ?></p>
+            <p class="trust-line">🔒 <?= e(ts('guarantee_text')) ?></p>
             <p class="format-note"><?= e(ts('format_note')) ?></p>
         </div>
     </div>

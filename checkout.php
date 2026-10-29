@@ -107,7 +107,7 @@ require __DIR__ . '/includes/header.php';
                 </div>
                 <p class="pay-error" id="pay-error" role="alert"></p>
                 <div class="secure-row">
-                    <span>🔒 Secure checkout</span><span>💳 Payments by Paddle</span><span>↩︎ 30-day guarantee</span>
+                    <span>🔒 Secure checkout</span><span>💳 Payments by Paddle</span><span>⚡ Instant PDF download</span>
                 </div>
                 <p class="field-hint" style="text-align:center">Applicable sales tax/VAT is calculated by Paddle based on your country.</p>
             </div>

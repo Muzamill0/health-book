@@ -195,7 +195,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ['faq', 'Do I need special ingredients or equipment?', '', 'Not at all. The recipes use everyday ingredients and standard kitchen tools.', '', '', '', 3],
                     ['faq', 'Are the recipes suitable for vegetarians?', '', 'Yes. A full cookbook is dedicated to plant-based meals and many other recipes include vegetarian swaps.', '', '', '', 4],
                     ['faq', 'Is my payment secure?', '', 'Payments are processed securely by Paddle, our authorised reseller and merchant of record. We never see or store your card details.', '', '', '', 5],
-                    ['faq', 'What if I am not happy with it?', '', 'You are covered by our 30-day money-back guarantee. Just email us and we will refund you.', '', '', '', 6],
+                    ['faq', 'Can I get a refund?', '', 'Because the cookbooks are digital files delivered instantly after payment, all sales are final and we do not offer refunds. Please review the books included before you buy.', '', '', '', 6],
                 ];
                 foreach ($seed as $row) {
                     $item->execute($row);
@@ -228,7 +228,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ((int) $pdo->query('SELECT COUNT(*) FROM pages')->fetchColumn() === 0) {
                 $page = $pdo->prepare('INSERT INTO pages (slug, title, content, sort_order) VALUES (?,?,?,?)');
                 $page->execute(['contact', 'Contact Us', '<p>Have a question about your order? Email us at <a href="mailto:support@example.com">support@example.com</a> and we will reply within one business day.</p>', 1]);
-                $page->execute(['refund-policy', 'Refund Policy', '<p>We offer a 30-day money-back guarantee. If you are not satisfied with your purchase, contact us within 30 days for a full refund.</p>', 2]);
+                $page->execute(['refund-policy', 'Refund Policy', '<p>All sales are final. Because our cookbooks are digital products delivered instantly after payment, we do not offer refunds, returns or exchanges once an order is completed.</p><p>Please review the product details and the books included before purchasing. If you have trouble downloading your files, contact us and we will help you get access.</p>', 2]);
                 $page->execute(['privacy-policy', 'Privacy Policy', '<p>We only collect the information needed to process your order and send you your download. Payments are handled securely by Paddle, our merchant of record. We never sell your data.</p>', 3]);
                 $page->execute(['terms', 'Terms of Service', '<p>By purchasing you receive a personal, non-transferable licence to use the digital products. Redistribution or resale is not permitted.</p>', 4]);
             }

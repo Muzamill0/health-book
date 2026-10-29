@@ -20,7 +20,7 @@ return [
         'label' => 'Announcement & Header',
         'fields' => [
             'announcement_enabled' => ['label' => 'Show announcement bar', 'type' => 'toggle', 'default' => '1'],
-            'announcement_text'    => ['label' => 'Announcement text (one message per line, rotates)', 'type' => 'textarea', 'default' => "Limited-time offer: save over 80% today\nInstant digital download — start cooking tonight\n30-day money-back guarantee"],
+            'announcement_text'    => ['label' => 'Announcement text (one message per line, rotates)', 'type' => 'textarea', 'default' => "Limited-time offer: save over 80% today\nInstant digital download — start cooking tonight"],
             'topbar_timer_enabled' => ['label' => 'Show timer in announcement bar (always 1–2 hours left, adds 1 hour when it drops below 1 hour)', 'type' => 'toggle', 'default' => '1'],
             'topbar_timer_text'    => ['label' => 'Timer label', 'type' => 'text', 'default' => 'Offer ends in'],
             'nav_cta_text'         =>['label' => 'Header button text', 'type' => 'text', 'default' => 'Get the Bundle'],
@@ -40,7 +40,7 @@ return [
             'countdown_mode'     => ['label' => 'Countdown mode: "daily" (resets at midnight) or "fixed"', 'type' => 'text', 'default' => 'daily'],
             'countdown_end'      => ['label' => 'Fixed countdown end (used when mode is fixed)', 'type' => 'datetime', 'default' => ''],
             'buy_button_text'    => ['label' => 'Buy button text', 'type' => 'text', 'default' => 'Get Instant Access'],
-            'guarantee_text'     => ['label' => 'Text under buy button', 'type' => 'text', 'default' => 'Secure checkout · Instant PDF download · 30-day guarantee'],
+            'guarantee_text'     => ['label' => 'Text under buy button (trust line)', 'type' => 'text', 'default' => 'Secure checkout · Instant PDF download · Lifetime access'],
             'format_note'        => ['label' => 'Format note', 'type' => 'text', 'default' => 'Digital product — works on phone, tablet, computer or print at home.'],
         ],
     ],

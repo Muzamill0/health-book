@@ -92,7 +92,7 @@ p { margin: 0 0 1em; }
 .countdown__units b { display: block; font-size: 1.35rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .countdown__units small { font-size: .65rem; text-transform: uppercase; letter-spacing: .08em; opacity: .8; }
 .countdown__units > span { font-weight: 700; color: var(--dark); }
-.guarantee { text-align: center; font-size: .9rem; color: var(--muted); margin: .9rem 0 .3rem; }
+.trust-line { text-align: center; font-size: .9rem; color: var(--muted); margin: .9rem 0 .3rem; }
 .format-note { text-align: center; font-size: .85rem; color: var(--muted); }
 
 /* ---------- Sections ---------- */
