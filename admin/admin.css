@@ -107,3 +107,5 @@ input:focus, textarea:focus, select:focus { outline: 2px solid rgba(193,98,45,.3
 .bundle-book span { display: grid; }
 .bundle-book small { color: var(--muted); }
 .bundle-total { background: #f6f2ea; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; font-weight: 600; }
+
+.payload { max-width: 520px; max-height: 320px; overflow: auto; background: #1f2a27; color: #e9eee8; border-radius: 8px; padding: 10px 12px; font-size: .75rem; white-space: pre; }

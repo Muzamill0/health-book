@@ -62,7 +62,7 @@ require __DIR__ . '/_top.php';
         1. In <a href="<?= e($vendor) ?>" target="_blank" rel="noopener">Paddle (<?= PADDLE_ENV === 'production' ? 'live' : 'sandbox' ?>)</a> → <strong>Developer tools → Authentication</strong>: create an <strong>API key</strong> and a <strong>client-side token</strong>; paste them into <code>.env</code> as <code>PADDLE_API_KEY</code> and <code>PADDLE_CLIENT_TOKEN</code>.<br>
         2. <strong>Checkout → Checkout settings</strong>: set the <em>Default payment link</em> to <code><?= e(url('checkout.php')) ?></code> (Paddle requires this before it will create transactions). For live, also add your domain under <em>Website approval</em>.<br>
         3. <strong>Developer tools → Notifications</strong>: add a destination <code><?= e(url('webhook.php')) ?></code> with events
-           <code>transaction.completed</code>, <code>transaction.paid</code>, <code>transaction.payment_failed</code>, <code>transaction.past_due</code>, <code>transaction.canceled</code>; copy its secret key into <code>PADDLE_WEBHOOK_SECRET</code>.<br>
+           <code>transaction.completed</code>, <code>transaction.paid</code>, <code>transaction.payment_failed</code>, <code>transaction.past_due</code>, <code>transaction.canceled</code>; copy its secret key into <code>PADDLE_WEBHOOK_SECRET</code>. Received webhooks appear in <a href="webhooks.php">Webhook Log</a>.<br>
         4. Test in sandbox with card <code>4242 4242 4242 4242</code>, any future expiry, CVC <code>100</code>. When ready, switch <code>PADDLE_ENV=production</code> and use your live keys.<br>
         5. Paddle is the merchant of record: it adds sales tax/VAT where required, emails the buyer a receipt and generates the invoice. Only card payments are offered at checkout.
     </div>

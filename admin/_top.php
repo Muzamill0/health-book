@@ -42,6 +42,7 @@ $nav = function (string $href, string $label, bool $active) {
             <?= $nav('referrers.php', '🔗 Referral Links', $current === 'referrers.php') ?>
             <?= $nav('subscribers.php', '✉️ Subscribers', $current === 'subscribers.php') ?>
             <?= $nav('payments.php', '💳 Paddle Payments', $current === 'payments.php') ?>
+            <?= $nav('webhooks.php', '📡 Webhook Log', $current === 'webhooks.php') ?>
             <div class="nav-label">Account</div>
             <?= $nav('account.php', '🔑 Change Password', $current === 'account.php') ?>
             <a href="<?= e(url()) ?>" target="_blank">↗ View Website</a>

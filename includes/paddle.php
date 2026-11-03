@@ -161,8 +161,12 @@ function sync_order_from_transaction(array $txn): ?array
         'paid', 'completed' => 'paid',
         'past_due'          => 'failed',
         'canceled'          => 'cancelled',
-        default             => $order['status'] === 'paid' ? 'paid' : 'pending',
+        default             => 'pending',
     };
+    // Webhooks can arrive late or out of order: never take a paid order back to unpaid.
+    if ($order['status'] === 'paid') {
+        $status = 'paid';
+    }
 
     $updates = ['status' => $status];
     if ($status === 'paid') {
