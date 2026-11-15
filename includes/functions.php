@@ -462,6 +462,114 @@ function current_referrer(): ?array
     return preg_match('/^[a-z0-9-]{1,50}$/', $code) ? referrer_by_code($code) : null;
 }
 
+/* ---------- Partner users (referral link owners) ---------- */
+
+const PARTNER_MAX_FAILED_LOGINS = 5;
+const PARTNER_LOCK_MINUTES = 15;
+
+/** Digits-only phone number in international form, e.g. "0300 1234567" and "+92 300 1234567" both become "923001234567". */
+function normalize_phone(string $raw): string
+{
+    $digits = preg_replace('/\D+/', '', $raw);
+    if (str_starts_with($digits, '00')) {
+        $digits = substr($digits, 2);
+    }
+    if (strlen($digits) === 11 && $digits[0] === '0') {
+        $digits = '92' . substr($digits, 1); // Pakistani local format 03xx…
+    }
+    return $digits;
+}
+
+function valid_phone(string $normalized): bool
+{
+    return (bool) preg_match('/^\d{10,15}$/', $normalized);
+}
+
+/**
+ * Check an email-or-phone + password. Returns the partner row on success, or an error message string.
+ * Accounts lock for a while after repeated wrong passwords.
+ */
+function partner_attempt_login(string $identifier, string $password): array|string
+{
+    $identifier = trim($identifier);
+    $generic = 'Incorrect email/phone or password.';
+    if ($identifier === '' || $password === '') {
+        return 'Please enter your email or phone number and your password.';
+    }
+    if (str_contains($identifier, '@')) {
+        $stmt = db()->prepare('SELECT * FROM partners WHERE email = ?');
+        $stmt->execute([mb_strtolower($identifier)]);
+    } else {
+        $stmt = db()->prepare('SELECT * FROM partners WHERE phone = ?');
+        $stmt->execute([normalize_phone($identifier)]);
+    }
+    $partner = $stmt->fetch();
+    if (!$partner) {
+        password_verify($password, '$2y$12$Q48mZTQPpYeG5puWPWGJcekHp81w7Kjs8dhr2FRVqSD5eawfztQkK'); // same cost as a real check, so timing doesn't reveal which accounts exist
+        return $generic;
+    }
+    if ($partner['locked_until'] && strtotime($partner['locked_until']) > time()) {
+        return 'Too many wrong attempts. Please try again in ' . PARTNER_LOCK_MINUTES . ' minutes.';
+    }
+    if (!password_verify($password, $partner['password_hash'])) {
+        $failed = (int) $partner['failed_logins'] + 1;
+        $lock = $failed >= PARTNER_MAX_FAILED_LOGINS ? date('Y-m-d H:i:s', time() + PARTNER_LOCK_MINUTES * 60) : null;
+        db()->prepare('UPDATE partners SET failed_logins = ?, locked_until = ? WHERE id = ?')
+            ->execute([$lock ? 0 : $failed, $lock, $partner['id']]);
+        return $lock ? 'Too many wrong attempts. Please try again in ' . PARTNER_LOCK_MINUTES . ' minutes.' : $generic;
+    }
+    if (!(int) $partner['is_active']) {
+        return 'Your account is disabled. Please contact the site owner.';
+    }
+    db()->prepare('UPDATE partners SET failed_logins = 0, locked_until = NULL, last_login_at = NOW() WHERE id = ?')
+        ->execute([$partner['id']]);
+    if (password_needs_rehash($partner['password_hash'], PASSWORD_DEFAULT)) {
+        db()->prepare('UPDATE partners SET password_hash = ? WHERE id = ?')
+            ->execute([password_hash($password, PASSWORD_DEFAULT), $partner['id']]);
+    }
+    return $partner;
+}
+
+/** The logged-in partner (re-checked on every request, so disabling an account logs it out). */
+function current_partner(): ?array
+{
+    static $partner = false;
+    if ($partner === false) {
+        $partner = null;
+        if (!empty($_SESSION['partner_id'])) {
+            $stmt = db()->prepare('SELECT * FROM partners WHERE id = ? AND is_active = 1');
+            $stmt->execute([(int) $_SESSION['partner_id']]);
+            $partner = $stmt->fetch() ?: null;
+            if (!$partner) {
+                unset($_SESSION['partner_id']);
+            }
+        }
+    }
+    return $partner;
+}
+
+function require_partner(): array
+{
+    $partner = current_partner();
+    if (!$partner) {
+        redirect(url('partner/index.php'));
+    }
+    return $partner;
+}
+
+/** A partner's referral links with clicks and paid orders. */
+function partner_links(int $partnerId): array
+{
+    $stmt = db()->prepare("SELECT r.id, r.name, r.code, r.is_active, r.clicks, COUNT(o.id) AS orders
+        FROM referrers r
+        LEFT JOIN orders o ON o.referrer_id = r.id AND o.status = 'paid' AND o.payment_provider = 'paddle'
+        WHERE r.partner_id = ?
+        GROUP BY r.id
+        ORDER BY r.name");
+    $stmt->execute([$partnerId]);
+    return $stmt->fetchAll();
+}
+
 function is_admin(): bool
 {
     return !empty($_SESSION['admin_id']);

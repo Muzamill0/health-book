@@ -40,6 +40,7 @@ $nav = function (string $href, string $label, bool $active) {
             <div class="nav-label">Sales</div>
             <?= $nav('orders.php', '🧾 Orders', $current === 'orders.php') ?>
             <?= $nav('referrers.php', '🔗 Referral Links', $current === 'referrers.php') ?>
+            <?= $nav('partners.php', '👤 Partner Users', in_array($current, ['partners.php', 'partner-edit.php'], true)) ?>
             <?= $nav('subscribers.php', '✉️ Subscribers', $current === 'subscribers.php') ?>
             <?= $nav('payments.php', '💳 Paddle Payments', $current === 'payments.php') ?>
             <?= $nav('webhooks.php', '📡 Webhook Log', $current === 'webhooks.php') ?>

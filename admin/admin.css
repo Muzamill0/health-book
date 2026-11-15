@@ -109,3 +109,13 @@ input:focus, textarea:focus, select:focus { outline: 2px solid rgba(193,98,45,.3
 .bundle-total { background: #f6f2ea; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; font-weight: 600; }
 
 .payload { max-width: 520px; max-height: 320px; overflow: auto; background: #1f2a27; color: #e9eee8; border-radius: 8px; padding: 10px 12px; font-size: .75rem; white-space: pre; }
+
+/* Partner area */
+.partner-body { background: var(--bg); }
+.partner-wrap { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
+.partner-top { background: #fff; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
+.partner-top__inner { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; min-height: 60px; }
+.partner-top nav { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; font-size: .92rem; }
+.partner-top nav a { text-decoration: none; }
+.partner-title { font-size: 1.4rem; margin: 0 0 18px; }
+.stats--2 { grid-template-columns: repeat(2, 1fr); }

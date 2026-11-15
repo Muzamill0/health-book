@@ -66,6 +66,7 @@ if ($editId && $_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $rows = db()->query("SELECT r.*,
+        (SELECT p.name FROM partners p WHERE p.id = r.partner_id) AS owner_name,
         COUNT(o.id) AS checkouts,
         COALESCE(SUM(o.status = 'paid'), 0) AS sales,
         COALESCE(SUM(CASE WHEN o.status = 'paid' THEN o.amount END), 0) AS revenue
@@ -127,6 +128,7 @@ require __DIR__ . '/_top.php';
             <tr class="<?= $r['is_active'] ? '' : 'is-hidden' ?>">
                 <td>
                     <strong><?= e($r['name']) ?></strong>
+                    <br><small><?= $r['owner_name'] ? '👤 <a href="partner-edit.php?id=' . (int) $r['partner_id'] . '">' . e($r['owner_name']) . '</a>' : '<span class="muted">No user — <a href="partners.php">assign</a></span>' ?></small>
                     <?php if (!$r['is_active']): ?> <span class="badge badge-pending">Disabled</span><?php endif; ?>
                     <?php if ($r['notes']): ?><br><small class="muted"><?= e($r['notes']) ?></small><?php endif; ?>
                 </td>

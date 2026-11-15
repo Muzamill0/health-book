@@ -129,11 +129,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     PRIMARY KEY (order_id, file_key)
                 ) ENGINE=InnoDB;
 
+                CREATE TABLE IF NOT EXISTS partners (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(150) NOT NULL,
+                    email VARCHAR(190) NOT NULL UNIQUE,
+                    phone VARCHAR(20) NOT NULL UNIQUE,
+                    password_hash VARCHAR(255) NOT NULL,
+                    is_active TINYINT(1) NOT NULL DEFAULT 1,
+                    failed_logins INT NOT NULL DEFAULT 0,
+                    locked_until DATETIME DEFAULT NULL,
+                    last_login_at DATETIME DEFAULT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB;
+
                 CREATE TABLE IF NOT EXISTS referrers (
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     name VARCHAR(150) NOT NULL,
                     code VARCHAR(50) NOT NULL UNIQUE,
                     notes VARCHAR(255) NOT NULL DEFAULT '',
+                    partner_id INT DEFAULT NULL,
                     clicks INT NOT NULL DEFAULT 0,
                     is_active TINYINT(1) NOT NULL DEFAULT 1,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
