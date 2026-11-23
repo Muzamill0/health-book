@@ -23,7 +23,7 @@ require __DIR__ . '/_top.php';
     <?php else: ?>
     <div class="table-wrap">
     <table>
-        <thead><tr><th>Link</th><th>Share this link</th><th>Clicks</th><th>Orders</th></tr></thead>
+        <thead><tr><th>Link</th><th>Share this link</th><th>Clicks</th><th>Orders</th><th></th></tr></thead>
         <tbody>
         <?php foreach ($links as $l): ?>
             <tr class="<?= $l['is_active'] ? '' : 'is-hidden' ?>">
@@ -33,6 +33,7 @@ require __DIR__ . '/_top.php';
                 </td>
                 <td><strong><?= number_format((int) $l['clicks']) ?></strong></td>
                 <td><strong><?= number_format((int) $l['orders']) ?></strong></td>
+                <td><a class="btn btn-sm btn-light" href="history.php?link=<?= (int) $l['id'] ?>">Statistics</a></td>
             </tr>
         <?php endforeach; ?>
         </tbody>

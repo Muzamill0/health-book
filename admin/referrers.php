@@ -49,6 +49,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 flash('This link has orders, so it can’t be deleted. Disable it instead.', 'error');
             } else {
                 db()->prepare('DELETE FROM referrers WHERE id = ?')->execute([$id]);
+                try {
+                    db()->prepare('DELETE FROM referral_clicks_daily WHERE referrer_id = ?')->execute([$id]);
+                } catch (PDOException $e) {
+                    // table not created yet: nothing to clean up
+                }
                 flash('Referral link deleted.');
             }
             redirect('referrers.php');
@@ -144,6 +149,7 @@ require __DIR__ . '/_top.php';
                 <td><strong><?= e($sym) . number_format((float) $r['revenue'], 2) ?></strong></td>
                 <td class="actions">
                     <a class="btn btn-sm btn-light" href="orders.php?ref=<?= (int) $r['id'] ?>">Orders</a>
+                    <a class="btn btn-sm btn-light" href="referral-history.php?ref=<?= (int) $r['id'] ?>">History</a>
                     <a class="btn btn-sm btn-light" href="?edit=<?= (int) $r['id'] ?>">Edit</a>
                     <form method="post"><?= csrf_field() ?><input type="hidden" name="action" value="toggle"><input type="hidden" name="id" value="<?= (int) $r['id'] ?>"><button class="btn btn-sm btn-light"><?= $r['is_active'] ? 'Disable' : 'Enable' ?></button></form>
                     <?php if (!(int) $r['checkouts']): ?>

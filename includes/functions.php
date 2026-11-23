@@ -452,7 +452,81 @@ function referral_capture(): void
     if (empty($_SESSION['ref_clicked'][$code])) {
         $_SESSION['ref_clicked'][$code] = true;
         db()->prepare('UPDATE referrers SET clicks = clicks + 1 WHERE id = ?')->execute([$ref['id']]);
+        try {
+            // MySQL's CURDATE() matches orders.paid_at (set with NOW()), so clicks and orders share the same "day".
+            db()->prepare('INSERT INTO referral_clicks_daily (referrer_id, day, clicks) VALUES (?, CURDATE(), 1)
+                ON DUPLICATE KEY UPDATE clicks = clicks + 1')->execute([$ref['id']]);
+        } catch (PDOException $e) {
+            error_log('Daily referral click not saved (run database/migrations/2026-11-23-referral-daily-stats.sql): ' . $e->getMessage());
+        }
     }
+}
+
+/**
+ * The from/to dates of a history page, from ?from=YYYY-MM-DD&to=YYYY-MM-DD.
+ * Defaults to the last 30 days; at most one year; swapped if entered the wrong way round.
+ */
+function referral_history_range(): array
+{
+    $valid = fn ($d) => is_string($d) && ($dt = DateTime::createFromFormat('!Y-m-d', $d)) && $dt->format('Y-m-d') === $d;
+    $to   = $valid($_GET['to'] ?? null) ? $_GET['to'] : date('Y-m-d');
+    $from = $valid($_GET['from'] ?? null) ? $_GET['from'] : date('Y-m-d', strtotime($to . ' -29 days'));
+    if ($from > $to) {
+        [$from, $to] = [$to, $from];
+    }
+    $earliest = date('Y-m-d', strtotime($to . ' -365 days'));
+    return [max($from, $earliest), $to];
+}
+
+/**
+ * Day-by-day clicks, paid orders and revenue for referral links, newest day first, one row for every day in the range.
+ * Limit to one link with $referrerId, or to one partner's links with $partnerId (both null = all links).
+ */
+function referral_daily_stats(string $from, string $to, ?int $referrerId = null, ?int $partnerId = null): array
+{
+    $where  = '';
+    $params = [];
+    if ($referrerId !== null) {
+        $where .= ' AND r.id = ?';
+        $params[] = $referrerId;
+    }
+    if ($partnerId !== null) {
+        $where .= ' AND r.partner_id = ?';
+        $params[] = $partnerId;
+    }
+
+    $days = [];
+    for ($d = $to; $d >= $from; $d = date('Y-m-d', strtotime($d . ' -1 day'))) {
+        $days[$d] = ['day' => $d, 'clicks' => 0, 'orders' => 0, 'revenue' => 0.0];
+    }
+
+    try {
+        $stmt = db()->prepare("SELECT c.day, SUM(c.clicks) AS clicks
+            FROM referral_clicks_daily c JOIN referrers r ON r.id = c.referrer_id
+            WHERE c.day BETWEEN ? AND ?$where
+            GROUP BY c.day");
+        $stmt->execute(array_merge([$from, $to], $params));
+        foreach ($stmt as $row) {
+            $days[$row['day']]['clicks'] = (int) $row['clicks'];
+        }
+    } catch (PDOException $e) {
+        error_log('Daily referral clicks unavailable (run database/migrations/2026-11-23-referral-daily-stats.sql): ' . $e->getMessage());
+    }
+
+    $stmt = db()->prepare("SELECT DATE(o.paid_at) AS day, COUNT(*) AS orders, SUM(o.amount) AS revenue
+        FROM orders o JOIN referrers r ON r.id = o.referrer_id
+        WHERE o.status = 'paid' AND o.payment_provider = 'paddle'
+          AND o.paid_at >= ? AND o.paid_at < DATE_ADD(?, INTERVAL 1 DAY)$where
+        GROUP BY DATE(o.paid_at)");
+    $stmt->execute(array_merge([$from, $to], $params));
+    foreach ($stmt as $row) {
+        if (isset($days[$row['day']])) {
+            $days[$row['day']]['orders']  = (int) $row['orders'];
+            $days[$row['day']]['revenue'] = (float) $row['revenue'];
+        }
+    }
+
+    return array_values($days);
 }
 
 /** The active referrer remembered for this visitor, if any. */
@@ -555,6 +629,44 @@ function require_partner(): array
         redirect(url('partner/index.php'));
     }
     return $partner;
+}
+
+/** "Ali Khan" → "Ali K." — enough for a partner to recognise a sale without seeing the buyer's full details. */
+function mask_customer_name(string $name): string
+{
+    $parts = preg_split('/\s+/', trim($name), -1, PREG_SPLIT_NO_EMPTY);
+    if (!$parts) {
+        return '—';
+    }
+    $first = array_shift($parts);
+    return $parts ? $first . ' ' . mb_strtoupper(mb_substr(end($parts), 0, 1)) . '.' : $first;
+}
+
+/** "ali.khan@gmail.com" → "a***@gmail.com" */
+function mask_email(string $email): string
+{
+    [$user, $domain] = array_pad(explode('@', $email, 2), 2, '');
+    return $domain === '' ? '***' : mb_substr($user, 0, 1) . '***@' . $domain;
+}
+
+/**
+ * Paid orders made through a partner's links, paid between $from and $to (inclusive), newest first.
+ * Limit to one of their links with $referrerId.
+ */
+function partner_orders(int $partnerId, string $from, string $to, ?int $referrerId = null): array
+{
+    $sql = "SELECT o.order_no, o.customer_name, o.customer_email, o.product_name, o.amount, o.currency, o.paid_at, r.name AS link_name
+        FROM orders o JOIN referrers r ON r.id = o.referrer_id
+        WHERE r.partner_id = ? AND o.status = 'paid' AND o.payment_provider = 'paddle'
+          AND o.paid_at >= ? AND o.paid_at < DATE_ADD(?, INTERVAL 1 DAY)";
+    $params = [$partnerId, $from, $to];
+    if ($referrerId !== null) {
+        $sql .= ' AND r.id = ?';
+        $params[] = $referrerId;
+    }
+    $stmt = db()->prepare($sql . ' ORDER BY o.paid_at DESC LIMIT 500');
+    $stmt->execute($params);
+    return $stmt->fetchAll();
 }
 
 /** A partner's referral links with clicks and paid orders. */

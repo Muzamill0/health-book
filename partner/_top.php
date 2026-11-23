@@ -17,6 +17,7 @@ $flash = flash();
         <nav>
             <span class="muted"><?= e($partner['name']) ?></span>
             <a href="dashboard.php">Dashboard</a>
+            <a href="history.php">Statistics &amp; orders</a>
             <a href="password.php">Change password</a>
             <a href="logout.php">Log out</a>
         </nav>

@@ -94,6 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     INDEX (stripe_invoice_id),
                     INDEX (paddle_transaction_id),
                     INDEX (referrer_id),
+                    INDEX orders_referrer_paid (referrer_id, paid_at),
                     INDEX (status)
                 ) ENGINE=InnoDB;
 
@@ -152,6 +153,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     clicks INT NOT NULL DEFAULT 0,
                     is_active TINYINT(1) NOT NULL DEFAULT 1,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB;
+
+                CREATE TABLE IF NOT EXISTS referral_clicks_daily (
+                    referrer_id INT NOT NULL,
+                    day DATE NOT NULL,
+                    clicks INT NOT NULL DEFAULT 0,
+                    PRIMARY KEY (referrer_id, day),
+                    INDEX (day)
                 ) ENGINE=InnoDB;
 
                 CREATE TABLE IF NOT EXISTS webhook_events (
